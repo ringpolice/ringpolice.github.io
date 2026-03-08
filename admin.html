@@ -4,30 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chef Console | Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Libre+Baskerville&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="saveStatus">
-    <i id="statusIcon" class="fa-solid fa-circle-notch spinner"></i>
-    <span id="statusText">Syncing...</span>
-</div>
-
-<div id="iconModal" class="modal-overlay">
-    <div class="modal-content" style="width: 400px;">
-        <h3 style="margin-bottom:20px; font-family:'Playfair Display'; color:var(--gold);">Select Section Icon</h3>
-        <div class="icon-grid" id="icon-picker-list"></div>
-        <button class="btn btn-main" style="margin-top:20px;" onclick="closeIconPicker()">Close</button>
-    </div>
+    <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+    <span style="margin-left:8px;">Changes Staged</span>
 </div>
 
 <div class="container">
     <div class="header">
         <div class="controls">
-            <div class="control-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></div>
-            <div class="control-btn" onclick="toggleTheme()" title="Toggle Theme"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
+            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
+            <div class="control-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></div>
         </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
         <div class="subtitle">Kitchen Administration Console</div>
@@ -35,25 +27,21 @@
 
     <div id="admin-container"></div>
 
-    <div style="flex-shrink:0; padding-top: 20px;">
-        <button class="btn btn-add" style="width:100%;" onclick="addCategory()">+ Create New Menu Section</button>
-        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">DOWNLOAD MENU.JSON</button>
+    <div style="margin-top: 30px;">
+        <button class="btn btn-add" style="width:100%; border-style: dashed;" onclick="addCategory()">+ Create New Menu Section</button>
+        <button class="btn btn-main" onclick="downloadJSON()">DOWNLOAD MENU.JSON</button>
     </div>
 </div>
 
 <script>
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-
+    
     let menuData = null;
     let draggedItemInfo = null; 
     let draggedSectionIdx = null;
-    let activeIconCategory = null;
-
-    const iconList = ['fa-utensils', 'fa-bread-slice', 'fa-plate-wheat', 'fa-bowl-food', 'fa-burger', 'fa-pizza-slice', 'fa-hotdog', 'fa-egg', 'fa-cheese', 'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-cookie', 'fa-cake-candles', 'fa-wine-glass', 'fa-mug-hot', 'fa-glass-water', 'fa-beer-mug-empty', 'fa-cocktail'];
 
     async function init() {
-        const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
+        const response = await fetch(`./menu.json?v=${Date.now()}`);
         menuData = await response.json();
         render();
     }
@@ -61,89 +49,75 @@
     function render() {
         const container = document.getElementById('admin-container');
         container.innerHTML = '';
+        
         menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'admin-section-card';
             section.draggable = true;
-
-            section.ondragstart = (e) => {
-                if (e.target.className === 'section-drag-handle' || e.target.parentElement.className === 'section-drag-handle') {
-                    draggedSectionIdx = cIdx;
-                } else { e.preventDefault(); }
-            };
+            section.ondragstart = (e) => { if (e.target.className === 'section-drag-handle') draggedSectionIdx = cIdx; else e.preventDefault(); };
             section.ondragover = (e) => e.preventDefault();
             section.ondrop = (e) => {
-                e.preventDefault();
                 if (draggedSectionIdx !== null) {
                     const [moved] = menuData.categories.splice(draggedSectionIdx, 1);
                     menuData.categories.splice(cIdx, 0, moved);
                     draggedSectionIdx = null; render(); showStatus();
-                } else if (draggedItemInfo !== null) {
-                    const { cIdx: srcC, iIdx: srcI } = draggedItemInfo;
-                    const [moved] = menuData.categories[srcC].items.splice(srcI, 1);
-                    menuData.categories[cIdx].items.push(moved);
-                    draggedItemInfo = null; render(); showStatus();
                 }
             };
 
             section.innerHTML = `
                 <div class="section-drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
-                <div style="display:flex; align-items:center; margin-bottom:15px; padding: 0 5px;">
-                    <i class="fa-solid ${cat.icon || 'fa-utensils'} admin-icon-display" onclick="openIconPicker(${cIdx})"></i>
-                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
-                    <button class="btn btn-del" style="margin-left:10px;" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
+                <div style="display:flex; align-items:center; margin-bottom:20px; gap:15px;">
+                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value; showStatus();">
+                    <button class="btn" style="color:#c0392b; background:rgba(192,57,43,0.1);" onclick="removeCategory(${cIdx})"><i class="fa-trash"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" style="font-size:12px;" onclick="addItem(${cIdx})">+ Add Dish</button>`;
-            
+                <button class="btn btn-add" onclick="addItem(${cIdx})">+ Add Dish</button>
+            `;
+
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
                 row.className = 'admin-item-box';
                 row.draggable = true;
                 row.ondragstart = (e) => { e.stopPropagation(); draggedItemInfo = { cIdx, iIdx }; };
+                row.ondragover = (e) => e.preventDefault();
+                row.ondrop = (e) => {
+                    e.stopPropagation();
+                    if (draggedItemInfo) {
+                        const { cIdx: sC, iIdx: sI } = draggedItemInfo;
+                        const [moved] = menuData.categories[sC].items.splice(sI, 1);
+                        menuData.categories[cIdx].items.splice(iIdx, 0, moved);
+                        draggedItemInfo = null; render(); showStatus();
+                    }
+                };
 
                 row.innerHTML = `
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <i class="fa-solid fa-grip-vertical drag-handle"></i>
-                        <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
-                        <div style="position:relative; flex:1; display:flex; align-items:center;">
-                            <span style="position:absolute; left:5px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="number" class="admin-input" style="padding-left:18px;" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
+                    <div class="item-row">
+                        <i class="fa-solid fa-grip-vertical" style="color:var(--gold); opacity:0.3; cursor:grab;"></i>
+                        <input class="admin-input" placeholder="Item Name" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value; showStatus();">
+                        <input class="admin-input" placeholder="Description" style="font-size:12px; opacity:0.8;" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value; showStatus();">
+                        <div style="position:relative;">
+                            <span style="position:absolute; left:0; top:8px; font-size:12px; color:var(--gold);">$</span>
+                            <input type="number" class="admin-input" style="padding-left:12px;" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value); showStatus();">
                         </div>
-                        <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
+                        <button class="btn" style="color:#c0392b; font-size:14px;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:40px; font-size:12px; margin-top:5px; margin-left:32px; width:calc(100% - 32px);" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
+                `;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
         });
     }
 
-    function openIconPicker(cIdx) {
-        activeIconCategory = cIdx;
-        const pickerList = document.getElementById('icon-picker-list');
-        pickerList.innerHTML = '';
-        iconList.forEach(icon => {
-            const el = document.createElement('i');
-            el.className = `fa-solid ${icon} icon-option`;
-            el.onclick = () => { menuData.categories[activeIconCategory].icon = icon; closeIconPicker(); render(); showStatus(); };
-            pickerList.appendChild(el);
-        });
-        document.getElementById('iconModal').style.display = 'flex';
-    }
-    function closeIconPicker() { document.getElementById('iconModal').style.display = 'none'; }
-    function updateItem(c, i, f, v) { menuData.categories[c].items[i][f] = (f === 'price') ? (parseInt(v) || 0) : v; showStatus(); }
-    function updateCat(c, v) { menuData.categories[c].title = v; showStatus(); }
-    function showStatus() { const el = document.getElementById('saveStatus'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1500); }
+    function showStatus() { const s = document.getElementById('saveStatus'); s.classList.add('show'); setTimeout(() => s.classList.remove('show'), 2000); }
+    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
+    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
+    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
+    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu.json'; a.click();
     }
-    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
-    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
-    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
     function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
     function toggleTheme() { document.body.classList.toggle('dark'); }
 
