@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Dining Menu | VindexCraft</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
-            <i id="themeIcon" class="fa-solid fa-moon"></i>
+        <div class="controls">
+            <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                <i id="themeIcon" class="fa-solid fa-moon"></i>
+            </div>
+            <a href="admin.html" class="chef-login" title="Chef Admin">
+                <i class="fa-solid fa-user-tie"></i>
+            </a>
         </div>
+        
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png" alt="State Logo">
         <div class="subtitle">State Dining Service</div>
     </div>
@@ -30,9 +34,6 @@
 </div>
 
 <script>
-    /**
-     * Loads menu data from a local JSON file and renders it to the page.
-     */
     async function loadMenu() {
         try {
             const response = await fetch('menu.json');
@@ -43,7 +44,6 @@
             data.categories.forEach(cat => {
                 const section = document.createElement('div');
                 section.className = 'category-section';
-
                 let itemsHtml = `<div class="category-title">${cat.title}</div>`;
 
                 cat.items.forEach(item => {
@@ -57,23 +57,17 @@
                                 <span class="item-price">${item.price}</span>
                             </div>
                             ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
-                        </div>
-                    `;
+                        </div>`;
                 });
-
                 section.innerHTML = itemsHtml;
                 container.appendChild(section);
             });
         } catch (err) {
-            console.error("Menu Load Error:", err);
-            document.getElementById('menu-container').innerHTML = 
-                "<p style='text-align:center; color:red;'>Configuration Error: Please ensure menu.json exists and you are using a local server.</p>";
+            console.error(err);
+            document.getElementById('menu-container').innerHTML = "<p style='text-align:center;'>Unable to load menu. Check local server settings.</p>";
         }
     }
 
-    /**
-     * Toggles between light and dark modes.
-     */
     function toggleTheme(){
         document.body.classList.toggle("dark");
         const icon = document.getElementById("themeIcon");
@@ -81,9 +75,7 @@
         icon.classList.toggle("fa-sun");
     }
 
-    // Initialize the menu
     loadMenu();
 </script>
-
 </body>
 </html>

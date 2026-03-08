@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chef Console | State Dining</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Chef's Kitchen Console</h1>
+        <p style="color: var(--gold); margin-top: 10px;">Update Menu Items & Pricing</p>
+    </div>
+
+    <div id="admin-editor">
+        </div>
+
+    <div style="text-align: center;">
+        <button class="btn-save" onclick="downloadJSON()">
+            <i class="fa-solid fa-file-export"></i> Export New menu.json
+        </button>
+        <br><br>
+        <a href="index.html" style="color: var(--text-muted); text-decoration: none; font-size: 14px;">← Exit to Public Menu</a>
+    </div>
+</div>
+
+<script>
+    let menuData = null;
+
+    async function initAdmin() {
+        try {
+            const response = await fetch('menu.json');
+            menuData = await response.json();
+            renderEditor();
+        } catch (e) {
+            alert("Error: Could not load menu.json. Make sure you're using a local server.");
+        }
+    }
+
+    function renderEditor() {
+        const container = document.getElementById('admin-editor');
+        let html = '';
+
+        menuData.categories.forEach((cat, catIdx) => {
+            html += `<h3 style="margin: 20px 0 10px; color:var(--navy);">${cat.title}</h3>
+            <table class="admin-table">
+                <tr style="background:rgba(0,0,0,0.05)"><th>Item Name</th><th>Price</th><th>Description</th></tr>`;
+            
+            cat.items.forEach((item, itemIdx) => {
+                html += `
+                <tr>
+                    <td><input class="admin-input" value="${item.name}" onchange="updateItem(${catIdx}, ${itemIdx}, 'name', this.value)"></td>
+                    <td><input class="admin-input" value="${item.price}" onchange="updateItem(${catIdx}, ${itemIdx}, 'price', this.value)"></td>
+                    <td><input class="admin-input" value="${item.desc || ''}" onchange="updateItem(${catIdx}, ${itemIdx}, 'desc', this.value)"></td>
+                </tr>`;
+            });
+            html += `</table>`;
+        });
+        container.innerHTML = html;
+    }
+
+    function updateItem(catIdx, itemIdx, field, value) {
+        menuData.categories[catIdx].items[itemIdx][field] = value;
+    }
+
+    function downloadJSON() {
+        const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "menu.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        alert("Success! Now replace the 'menu.json' in your project folder with this new file.");
+    }
+
+    initAdmin();
+</script>
+</body>
+</html>
