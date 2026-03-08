@@ -15,7 +15,7 @@
         <input type="text" id="username" class="login-input" placeholder="Username">
         <input type="password" id="password" class="login-input" placeholder="Password">
         <button class="btn btn-main" onclick="attemptLogin()" style="font-size: 14px; padding: 12px;">Login to Console</button>
-        <button onclick="closeLogin()" style="margin-top:20px; background:none; border:none; color:var(--text-muted); cursor:pointer;">Return to Menu</button>
+        <button onclick="closeLogin()" style="margin-top:20px; background:none; border:none; color:var(--text-muted); cursor:pointer;">Cancel</button>
     </div>
 </div>
 
@@ -72,7 +72,7 @@
         const p = document.getElementById('password').value;
         const user = cachedData.users.find(user => user.username === u && user.password === p);
         if (user) { sessionStorage.setItem('authenticated', 'true'); window.location.href = 'admin.html'; }
-        else { alert("Incorrect credentials."); }
+        else { alert("Access Denied."); }
     }
     loadMenu();
 </script>

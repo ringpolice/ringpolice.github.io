@@ -27,14 +27,25 @@
     <div id="admin-container"></div>
 
     <div style="flex-shrink:0; padding-top: 10px;">
-        <button class="btn btn-add" style="width:100%;" onclick="addCategory()">+ Create New Menu Section</button>
-        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">DOWNLOAD UPDATED MENU.JSON</button>
+        <button class="btn btn-add" style="width:100%;" onclick="addCategory()">+ New Category</button>
+        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
     </div>
 </div>
 
 <script>
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+
+    let menuData = null;
+    let saveTimeout;
+    let draggedItemInfo = null;
+
+    async function init() {
+        const response = await fetch('./menu.json');
+        menuData = await response.json();
+        render();
+        updateThemeIcon(document.body.classList.contains('dark'));
+    }
 
     function toggleTheme() {
         const isDark = document.body.classList.toggle('dark');
@@ -47,48 +58,44 @@
         if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
 
-    let menuData = null;
-    let saveTimeout;
-
-    async function init() {
-        const response = await fetch('./menu.json');
-        menuData = await response.json();
-        render();
-        updateThemeIcon(document.body.classList.contains('dark'));
-    }
-
     function render() {
         const container = document.getElementById('admin-container');
         container.innerHTML = '';
         menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'admin-section-card';
+            section.ondragover = (e) => e.preventDefault();
+            section.ondrop = (e) => handleDrop(e, cIdx);
+            
             section.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <input class="admin-input" style="font-weight:bold; font-size:20px; flex: 1; margin-right: 15px;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value, this)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value, this)">
                     <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" style="font-size: 12px;" onclick="addItem(${cIdx})">+ Add Dish</button>`;
+                <button class="btn btn-add" style="font-size:12px;" onclick="addItem(${cIdx})">+ Add Dish</button>`;
             
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
-                row.className = 'admin-item-box';
+                row.className = 'admin-item-box draggable-item';
+                row.draggable = true;
+                row.ondragstart = (e) => handleDragStart(e, cIdx, iIdx);
+                row.ondragend = (e) => e.target.classList.remove('dragging');
+
                 row.innerHTML = `
                     <div style="display:flex; gap:10px; align-items:center;">
+                        <i class="fa-solid fa-grip-vertical drag-handle"></i>
                         <input class="admin-input" style="flex:3" placeholder="Dish Name" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value, this)">
-                        
                         <div style="position:relative; flex:1; display:flex; align-items:center;">
                             <span style="position:absolute; left:8px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="text" class="admin-input price-input" style="padding-left:22px;" placeholder="0" value="${item.price}" 
+                            <input type="text" class="admin-input" style="padding-left:22px;" value="${item.price}" 
                                    onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)"
                                    onkeydown="validateNumber(event)">
                         </div>
-
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:50px; font-size:13px; margin-top: 5px;" placeholder="Description..." onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value, this)">${item.desc}</textarea>`;
+                    <textarea class="admin-input" style="height:45px; font-size:12px; margin-top:5px; margin-left:25px; width:calc(100% - 25px);" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value, this)">${item.desc}</textarea>`;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
@@ -96,13 +103,37 @@
     }
 
     function validateNumber(e) {
-        // Allow: backspace, delete, tab, escape, enter
         if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 || (e.keyCode >= 35 && e.keyCode <= 40)) return;
-        // Ensure that it is a number and stop the keypress
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-            e.preventDefault();
-        }
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) e.preventDefault();
     }
+
+    function handleDragStart(e, cIdx, iIdx) {
+        draggedItemInfo = { cIdx, iIdx };
+        e.target.classList.add('dragging');
+    }
+
+    function handleDrop(e, destCIdx) {
+        e.preventDefault();
+        if (!draggedItemInfo) return;
+        const { cIdx: srcCIdx, iIdx: srcIIdx } = draggedItemInfo;
+        const [movedItem] = menuData.categories[srcCIdx].items.splice(srcIIdx, 1);
+        menuData.categories[destCIdx].items.push(movedItem);
+        showStatus('sync');
+        render();
+        setTimeout(() => showStatus('saved'), 600);
+        draggedItemInfo = null;
+    }
+
+    function updateItem(c, i, f, v, el) { 
+        showStatus('sync');
+        menuData.categories[c].items[i][f] = (f === 'price') ? (parseInt(v) || 0) : v;
+        flashEffect(el);
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => showStatus('saved'), 800);
+    }
+
+    function updateCat(c, v, el) { menuData.categories[c].title = v; flashEffect(el); }
+    function flashEffect(el) { if(el){ el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); } }
 
     function showStatus(type) {
         const el = document.getElementById('saveStatus');
@@ -110,49 +141,20 @@
         const text = document.getElementById('statusText');
         el.classList.add('show');
         if (type === 'sync') {
-            icon.className = "fa-solid fa-circle-notch spinner";
-            icon.style.color = "var(--gold)";
-            text.innerText = "Syncing...";
+            icon.className = "fa-solid fa-circle-notch spinner"; icon.style.color = "var(--gold)"; text.innerText = "Syncing...";
         } else {
-            icon.className = "fa-solid fa-circle-check";
-            icon.style.color = "var(--green)";
-            text.innerText = "Data Updated";
-            setTimeout(() => el.classList.remove('show'), 2000);
+            icon.className = "fa-solid fa-circle-check"; icon.style.color = "var(--green)"; text.innerText = "Data Updated";
+            setTimeout(() => el.classList.remove('show'), 1500);
         }
     }
 
-    function updateCat(c, v, el) { 
-        menuData.categories[c].title = v; 
-        flashEffect(el);
-    }
-    
-    function updateItem(c, i, f, v, el) { 
-        showStatus('sync');
-        if (f === 'price') {
-            menuData.categories[c].items[i][f] = parseInt(v) || 0;
-        } else {
-            menuData.categories[c].items[i][f] = v; 
-        }
-        flashEffect(el);
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => showStatus('saved'), 800);
-    }
-
-    function flashEffect(el) {
-        if(el) {
-            el.classList.add('input-saved');
-            setTimeout(() => el.classList.remove('input-saved'), 500);
-        }
-    }
-
-    function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
-    function removeCategory(c) { if(confirm("Confirm deletion?")) { menuData.categories.splice(c,1); render(); } }
-    function addItem(c) { menuData.categories[c].items.push({name: "", price: 0, desc: ""}); render(); }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
+    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
+    function removeItem(c, i) { if(confirm("Delete item?")) { menuData.categories[c].items.splice(i,1); render(); } }
+    function addCategory() { menuData.categories.push({title: "New Category", items: []}); render(); }
+    function removeCategory(c) { if(confirm("Delete category?")) { menuData.categories.splice(c,1); render(); } }
 
     function downloadJSON() {
-        const dataStr = JSON.stringify(menuData, null, 2);
-        const blob = new Blob([dataStr], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'menu.json';
