@@ -2,24 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chef Console | Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Libre+Baskerville&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="saveStatus">
-    <i id="statusIcon" class="fa-solid fa-circle-check"></i>
-    <span id="statusText">Changes Staged</span>
+    <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+    <span>Changes Staged</span>
 </div>
 
 <div id="iconModal" class="modal-overlay">
-    <div class="modal-content" style="width: 400px;">
-        <h3 style="margin-bottom:20px; font-family:'Playfair Display'; color:var(--gold);">Select Section Icon</h3>
-        <div class="icon-grid" id="icon-picker-list"></div>
-        <button class="btn btn-main" style="margin-top:20px;" onclick="closeIconPicker()">Close</button>
+    <div class="modal-content">
+        <h3 style="margin-bottom:20px; font-family:'Playfair Display'; color:var(--gold);">Choose Icon</h3>
+        <div class="icon-grid" id="icon-picker-list" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;"></div>
+        <button class="btn btn-main" style="margin-top:20px;" onclick="closeIconPicker()">Cancel</button>
     </div>
 </div>
 
@@ -35,25 +35,21 @@
 
     <div id="admin-container"></div>
 
-    <div style="flex-shrink:0; padding-top: 20px;">
-        <button class="btn btn-add" style="width:100%; border:1px solid var(--green); color:var(--green);" onclick="addCategory()">+ Create New Menu Section</button>
+    <div style="padding-top: 20px;">
+        <button class="btn" style="width:100%; border:1px solid var(--green); color:var(--green); background:transparent;" onclick="addCategory()">+ Add New Section</button>
         <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">DOWNLOAD MENU.JSON</button>
     </div>
 </div>
 
 <script>
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-
+    
     let menuData = null;
-    let draggedItemInfo = null; 
-    let draggedSectionIdx = null;
     let activeIconCategory = null;
-
-    const iconList = ['fa-utensils', 'fa-bread-slice', 'fa-plate-wheat', 'fa-bowl-food', 'fa-burger', 'fa-pizza-slice', 'fa-hotdog', 'fa-egg', 'fa-cheese', 'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-cookie', 'fa-cake-candles', 'fa-wine-glass', 'fa-mug-hot', 'fa-glass-water', 'fa-beer-mug-empty', 'fa-cocktail'];
+    const iconList = ['fa-utensils', 'fa-bread-slice', 'fa-burger', 'fa-pizza-slice', 'fa-egg', 'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-wine-glass', 'fa-mug-hot', 'fa-cocktail'];
 
     async function init() {
-        const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
+        const response = await fetch(`./menu.json?v=${Date.now()}`);
         menuData = await response.json();
         render();
     }
@@ -61,140 +57,92 @@
     function render() {
         const container = document.getElementById('admin-container');
         container.innerHTML = '';
+        
         menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'admin-section-card';
-            section.dataset.cidx = cIdx;
-            section.draggable = true;
-
-            // Desktop Safari Drag Logic
-            section.ondragstart = (e) => {
-                if (e.target.classList.contains('section-drag-handle') || e.target.parentElement.classList.contains('section-drag-handle')) {
-                    draggedSectionIdx = cIdx;
-                    e.dataTransfer.setData('text/plain', cIdx); // Required for Safari
-                } else { e.preventDefault(); }
-            };
-            section.ondragover = (e) => e.preventDefault();
-            section.ondrop = (e) => handleDesktopDrop(e, cIdx);
-
+            
             section.innerHTML = `
-                <div class="section-drag-handle" ontouchstart="initTouchDrag(event, 'section', ${cIdx})">
-                    <i class="fa-solid fa-grip-lines"></i>
+                <div class="section-drag-handle">
+                    <i class="fa-solid fa-chevron-up" onclick="moveCat(${cIdx}, -1)" style="cursor:pointer; padding:0 15px;"></i>
+                    <span style="font-size:9px; opacity:0.7;">REORDER SECTION</span>
+                    <i class="fa-solid fa-chevron-down" onclick="moveCat(${cIdx}, 1)" style="cursor:pointer; padding:0 15px;"></i>
                 </div>
-                <div style="display:flex; align-items:center; margin-bottom:15px; padding: 0 5px;">
-                    <i class="fa-solid ${cat.icon || 'fa-utensils'} admin-icon-display" onclick="openIconPicker(${cIdx})"></i>
-                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
-                    <button class="btn btn-del" style="margin-left:10px; color:#c0392b; border:1px solid #c0392b;" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
+                <div style="display:flex; align-items:center; margin-bottom:15px;">
+                    <i class="fa-solid ${cat.icon} admin-icon-display" style="font-size:20px; color:var(--gold); padding:10px; border:1px dashed var(--gold); margin-right:10px; cursor:pointer;" onclick="openIconPicker(${cIdx})"></i>
+                    <input class="admin-input" style="font-weight:bold; flex:1;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value; showStatus();">
+                    <button class="btn" style="color:#c0392b;" onclick="removeCategory(${cIdx})"><i class="fa-trash"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" style="font-size:12px; border:1px solid var(--green); color:var(--green);" onclick="addItem(${cIdx})">+ Add Dish</button>`;
-            
+                <button class="btn" style="font-size:11px; color:var(--green); border:1px solid var(--green); background:transparent; margin-top:10px;" onclick="addItem(${cIdx})">+ Add Item</button>
+            `;
+
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
                 row.className = 'admin-item-box';
-                row.draggable = true;
-                row.ondragstart = (e) => { e.stopPropagation(); draggedItemInfo = { cIdx, iIdx }; e.dataTransfer.setData('text/plain', iIdx); };
-
                 row.innerHTML = `
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <i class="fa-solid fa-grip-vertical drag-handle" ontouchstart="initTouchDrag(event, 'item', ${cIdx}, ${iIdx})"></i>
-                        <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
-                        <div style="position:relative; flex:1; display:flex; align-items:center;">
-                            <span style="position:absolute; left:5px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="number" class="admin-input" style="padding-left:18px;" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="display:flex; flex-direction:column; gap:5px;">
+                            <i class="fa-solid fa-caret-up" onclick="moveItem(${cIdx}, ${iIdx}, -1)" style="cursor:pointer; color:var(--gold);"></i>
+                            <i class="fa-solid fa-caret-down" onclick="moveItem(${cIdx}, ${iIdx}, 1)" style="cursor:pointer; color:var(--gold);"></i>
                         </div>
-                        <button class="btn btn-del" style="color:#c0392b;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
+                        <input class="admin-input" style="flex:3" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value; showStatus();">
+                        <input type="number" class="admin-input" style="flex:1" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value); showStatus();">
+                        <button class="btn" onclick="removeItem(${cIdx}, ${iIdx})" style="color:#c0392b;">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:40px; font-size:12px; margin-top:5px; margin-left:32px; width:calc(100% - 32px);" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
+                    <textarea class="admin-input" style="font-size:12px; height:40px; margin-top:5px;" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value; showStatus();">${item.desc}</textarea>
+                `;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
         });
     }
 
-    // --- REFINED TOUCH DRAG (Safari Optimized) ---
-    function initTouchDrag(e, type, cIdx, iIdx = null) {
-        const touch = e.touches[0];
-        const original = e.target.closest(type === 'section' ? '.admin-section-card' : '.admin-item-box');
-        
-        let ghost = original.cloneNode(true);
-        ghost.classList.add('dragging-touch');
-        document.body.appendChild(ghost);
-        
-        const moveHandler = (me) => {
-            const mt = me.touches[0];
-            // Center the ghost on finger
-            requestAnimationFrame(() => {
-                ghost.style.left = (mt.clientX - 150) + 'px';
-                ghost.style.top = (mt.clientY - 30) + 'px';
-            });
-            me.preventDefault(); // CRITICAL for Safari to allow dragging without scrolling
-        };
-
-        const endHandler = (ee) => {
-            const et = ee.changedTouches[0];
-            document.body.removeChild(ghost);
-            document.removeEventListener('touchmove', moveHandler);
-            document.removeEventListener('touchend', endHandler);
-
-            const targetEl = document.elementFromPoint(et.clientX, et.clientY);
-            const targetSection = targetEl?.closest('.admin-section-card');
-            
-            if (targetSection) {
-                const destC = parseInt(targetSection.dataset.cidx);
-                if (type === 'section') {
-                    const [moved] = menuData.categories.splice(cIdx, 1);
-                    menuData.categories.splice(destC, 0, moved);
-                } else {
-                    const [moved] = menuData.categories[cIdx].items.splice(iIdx, 1);
-                    menuData.categories[destC].items.push(moved);
-                }
-                render(); showStatus();
-            }
-        };
-
-        document.addEventListener('touchmove', moveHandler, { passive: false });
-        document.addEventListener('touchend', endHandler);
+    // Fixed Reordering Logic (Works on all browsers/devices)
+    function moveCat(idx, dir) {
+        const newIdx = idx + dir;
+        if (newIdx < 0 || newIdx >= menuData.categories.length) return;
+        const temp = menuData.categories[idx];
+        menuData.categories[idx] = menuData.categories[newIdx];
+        menuData.categories[newIdx] = temp;
+        render(); showStatus();
     }
 
-    function handleDesktopDrop(e, destC) {
-        if (draggedSectionIdx !== null) {
-            const [moved] = menuData.categories.splice(draggedSectionIdx, 1);
-            menuData.categories.splice(destC, 0, moved);
-        } else if (draggedItemInfo !== null) {
-            const { cIdx: srcC, iIdx: srcI } = draggedItemInfo;
-            const [moved] = menuData.categories[srcC].items.splice(srcI, 1);
-            menuData.categories[destC].items.push(moved);
-        }
-        draggedSectionIdx = null; draggedItemInfo = null;
+    function moveItem(cIdx, iIdx, dir) {
+        const items = menuData.categories[cIdx].items;
+        const newIdx = iIdx + dir;
+        if (newIdx < 0 || newIdx >= items.length) return;
+        const temp = items[iIdx];
+        items[iIdx] = items[newIdx];
+        items[newIdx] = temp;
         render(); showStatus();
     }
 
     function openIconPicker(cIdx) {
         activeIconCategory = cIdx;
-        const pickerList = document.getElementById('icon-picker-list');
-        pickerList.innerHTML = '';
+        const list = document.getElementById('icon-picker-list');
+        list.innerHTML = '';
         iconList.forEach(icon => {
             const el = document.createElement('i');
-            el.className = `fa-solid ${icon} icon-option`;
+            el.className = `fa-solid ${icon}`;
+            el.style = "font-size:24px; padding:10px; cursor:pointer; text-align:center; border:1px solid #eee;";
             el.onclick = () => { menuData.categories[activeIconCategory].icon = icon; closeIconPicker(); render(); showStatus(); };
-            pickerList.appendChild(el);
+            list.appendChild(el);
         });
         document.getElementById('iconModal').style.display = 'flex';
     }
+
     function closeIconPicker() { document.getElementById('iconModal').style.display = 'none'; }
-    function updateItem(c, i, f, v) { menuData.categories[c].items[i][f] = (f === 'price') ? (parseInt(v) || 0) : v; showStatus(); }
-    function updateCat(c, v) { menuData.categories[c].title = v; showStatus(); }
-    function showStatus() { const el = document.getElementById('saveStatus'); el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 1500); }
+    function showStatus() { const s = document.getElementById('saveStatus'); s.classList.add('show'); setTimeout(() => s.classList.remove('show'), 2000); }
+    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
+    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
+    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
+    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu.json'; a.click();
     }
-    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
-    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
-    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
     function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
     function toggleTheme() { document.body.classList.toggle('dark'); }
 
