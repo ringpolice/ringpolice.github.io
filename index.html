@@ -3,59 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>State Dining Menu | VindexCraft</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <title>State Dining Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <div class="header">
-        <div class="controls">
-            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-            <a href="admin.html" class="control-btn"><i class="fa-solid fa-user-gear"></i></a>
-        </div>
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
-        <div class="subtitle">VindexCraft State Dining Service</div>
+    <div class="controls">
+        <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
+        <a href="admin.html" class="control-btn"><i class="fa-solid fa-user-shield"></i></a>
     </div>
 
-    <div class="menu-grid" id="menu-container">
-        </div>
+    <div class="header">
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <div class="subtitle">Official State Dining Menu</div>
+    </div>
 
-    <div class="footer">State Dining Service • VindexCraft</div>
+    <div class="menu-grid" id="menu-container"></div>
+
+    <div class="footer">VINDEXCRAFT OFFICIAL SERVICE • EST. 2024</div>
 </div>
 
 <script>
     async function loadMenu() {
         try {
-            const response = await fetch('menu.json');
+            const response = await fetch('./menu.json');
             const data = await response.json();
             const container = document.getElementById('menu-container');
 
-            data.categories.forEach((cat, index) => {
+            data.categories.forEach((cat, i) => {
                 const card = document.createElement('div');
-                card.className = 'menu-card fade-in-item';
-                // Staggered delay for each card
-                card.style.animationDelay = `${index * 0.15}s`;
+                card.className = 'menu-card fade-in-card';
+                card.style.animationDelay = (i * 0.15) + 's';
 
                 let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
-
                 cat.items.forEach(item => {
                     html += `
                         <div class="menu-item">
-                            <div class="item-main">
-                                <span class="item-name">${item.name}</span>
-                                <span class="item-price">${item.price}</span>
-                            </div>
-                            ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
+                            <div class="item-main"><span>${item.name}</span><span class="item-price">${item.price}</span></div>
+                            <span class="item-desc">${item.desc}</span>
                         </div>`;
                 });
-
                 card.innerHTML = html;
                 container.appendChild(card);
             });
-        } catch (e) { console.error("Menu load failed", e); }
+        } catch (e) { console.error("Could not load menu.json", e); }
     }
 
     function toggleTheme(){
@@ -63,7 +57,6 @@
         const icon = document.getElementById("themeIcon");
         icon.classList.toggle("fa-moon"); icon.classList.toggle("fa-sun");
     }
-
     loadMenu();
 </script>
 </body>
