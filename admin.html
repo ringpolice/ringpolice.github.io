@@ -46,35 +46,16 @@
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 
     let menuData = null;
-    let saveTimeout;
-    let draggedItemInfo = null;
+    let draggedItemInfo = null; 
     let draggedSectionIdx = null;
     let activeIconCategory = null;
 
-    const iconList = [
-        'fa-utensils', 'fa-bread-slice', 'fa-plate-wheat', 'fa-bowl-food', 'fa-burger', 
-        'fa-pizza-slice', 'fa-hotdog', 'fa-egg', 'fa-cheese', 'fa-bacon', 
-        'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-cookie', 'fa-cake-candles', 
-        'fa-apple-whole', 'fa-carrot', 'fa-leaf', 'fa-wine-glass', 'fa-mug-hot', 
-        'fa-glass-water', 'fa-beer-mug-empty', 'fa-cocktail', 'fa-bottle-water'
-    ];
+    const iconList = ['fa-utensils', 'fa-bread-slice', 'fa-plate-wheat', 'fa-bowl-food', 'fa-burger', 'fa-pizza-slice', 'fa-hotdog', 'fa-egg', 'fa-cheese', 'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-cookie', 'fa-cake-candles', 'fa-wine-glass', 'fa-mug-hot', 'fa-glass-water', 'fa-beer-mug-empty', 'fa-cocktail'];
 
     async function init() {
         const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
         menuData = await response.json();
         render();
-        updateThemeIcon(document.body.classList.contains('dark'));
-    }
-
-    function toggleTheme() {
-        const isDark = document.body.classList.toggle('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        updateThemeIcon(isDark);
-    }
-
-    function updateThemeIcon(isDark) {
-        const icon = document.getElementById('themeIcon');
-        if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
 
     function render() {
@@ -85,19 +66,33 @@
             section.className = 'admin-section-card';
             section.draggable = true;
 
+            // SECTION DRAG LOGIC
             section.ondragstart = (e) => {
-                if (e.target.className.includes('admin-section-card')) {
+                if (e.target.className === 'section-drag-handle' || e.target.parentElement.className === 'section-drag-handle') {
                     draggedSectionIdx = cIdx;
-                    e.target.style.opacity = "0.4";
+                    section.style.opacity = "0.4";
+                } else {
+                    e.preventDefault(); // Block drag if not hitting handle
                 }
             };
             section.ondragover = (e) => e.preventDefault();
             section.ondrop = (e) => {
                 e.preventDefault();
-                if (draggedSectionIdx !== null) handleSectionDrop(draggedSectionIdx, cIdx);
-                else handleItemDrop(e, cIdx);
+                if (draggedSectionIdx !== null) {
+                    const src = draggedSectionIdx;
+                    const [moved] = menuData.categories.splice(src, 1);
+                    menuData.categories.splice(cIdx, 0, moved);
+                    draggedSectionIdx = null;
+                    render(); showStatus('saved');
+                } else if (draggedItemInfo !== null) {
+                    const { cIdx: srcC, iIdx: srcI } = draggedItemInfo;
+                    const [moved] = menuData.categories[srcC].items.splice(srcI, 1);
+                    menuData.categories[cIdx].items.push(moved);
+                    draggedItemInfo = null;
+                    render(); showStatus('saved');
+                }
             };
-            section.ondragend = (e) => { e.target.style.opacity = "1"; draggedSectionIdx = null; };
+            section.ondragend = () => { section.style.opacity = "1"; draggedSectionIdx = null; };
 
             section.innerHTML = `
                 <div class="section-drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
@@ -112,10 +107,16 @@
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
-                row.className = 'admin-item-box draggable-item';
+                row.className = 'admin-item-box';
                 row.draggable = true;
-                row.ondragstart = (e) => { e.stopPropagation(); draggedItemInfo = { cIdx, iIdx }; e.target.classList.add('dragging'); };
-                row.ondragend = (e) => e.target.classList.remove('dragging');
+
+                // ITEM DRAG LOGIC
+                row.ondragstart = (e) => {
+                    e.stopPropagation(); // Prevents section from dragging
+                    draggedItemInfo = { cIdx, iIdx };
+                    row.style.opacity = "0.4";
+                };
+                row.ondragend = () => { row.style.opacity = "1"; };
 
                 row.innerHTML = `
                     <div style="display:flex; gap:10px; align-items:center;">
@@ -123,11 +124,11 @@
                         <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value, this)">
                         <div style="position:relative; flex:1; display:flex; align-items:center;">
                             <span style="position:absolute; left:5px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="text" class="admin-input" style="padding-left:18px;" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)" onkeydown="validateNum(event)">
+                            <input type="number" class="admin-input" style="padding-left:18px;" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)">
                         </div>
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:40px; font-size:12px; margin-top:5px; margin-left:25px; width:calc(100% - 25px);" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value, this)">${item.desc}</textarea>`;
+                    <textarea class="admin-input" style="height:40px; font-size:12px; margin-top:5px; margin-left:32px; width:calc(100% - 32px);" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value, this)">${item.desc}</textarea>`;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
@@ -141,90 +142,41 @@
         iconList.forEach(icon => {
             const el = document.createElement('i');
             el.className = `fa-solid ${icon} icon-option`;
-            el.onclick = () => selectIcon(icon);
+            el.onclick = () => { menuData.categories[activeIconCategory].icon = icon; closeIconPicker(); render(); showStatus('saved'); };
             pickerList.appendChild(el);
         });
         document.getElementById('iconModal').style.display = 'flex';
     }
-
-    function selectIcon(iconName) {
-        menuData.categories[activeIconCategory].icon = iconName;
-        closeIconPicker();
-        render();
-        showStatus('saved');
-    }
-
     function closeIconPicker() { document.getElementById('iconModal').style.display = 'none'; }
 
-    function handleSectionDrop(src, dest) {
-        if (src === dest) return;
-        const [moved] = menuData.categories.splice(src, 1);
-        menuData.categories.splice(dest, 0, moved);
-        showStatus('sync'); render(); setTimeout(() => showStatus('saved'), 600);
-    }
-
-    function handleItemDrop(e, destC) {
-        if (!draggedItemInfo) return;
-        const { cIdx, iIdx } = draggedItemInfo;
-        const [moved] = menuData.categories[cIdx].items.splice(iIdx, 1);
-        menuData.categories[destC].items.push(moved);
-        showStatus('sync'); render(); setTimeout(() => showStatus('saved'), 600);
-        draggedItemInfo = null;
-    }
-
-    function validateNum(e) {
-        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 || (e.keyCode >= 35 && e.keyCode <= 40)) return;
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) e.preventDefault();
-    }
-
     function updateItem(c, i, f, v, el) { 
-        showStatus('sync');
         menuData.categories[c].items[i][f] = (f === 'price') ? (parseInt(v) || 0) : v;
         if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); }
-        clearTimeout(saveTimeout); saveTimeout = setTimeout(() => showStatus('saved'), 800);
+        showStatus('saved');
     }
-
-    function updateCat(c, v, el) { 
-        menuData.categories[c].title = v; 
-        if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); }
-    }
+    function updateCat(c, v, el) { menuData.categories[c].title = v; if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); } showStatus('saved'); }
 
     function showStatus(type) {
         const el = document.getElementById('saveStatus');
         const icon = document.getElementById('statusIcon');
-        const text = document.getElementById('statusText');
         el.classList.add('show');
-        if (type === 'sync') { icon.className = "fa-solid fa-circle-notch spinner"; text.innerText = "Syncing..."; }
-        else { icon.className = "fa-solid fa-circle-check"; text.innerText = "Data Updated"; setTimeout(()=>el.classList.remove('show'), 1500); }
+        icon.className = "fa-solid fa-circle-check";
+        document.getElementById('statusText').innerText = "Changes Staged";
+        setTimeout(() => el.classList.remove('show'), 1500);
     }
-
-    function addItem(c) { 
-        menuData.categories[c].items.push({name: "New Dish", price: 0, desc: ""}); 
-        render(); 
-        setTimeout(() => {
-            const list = document.getElementById(`items-${c}`);
-            list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }, 50);
-    }
-
-    function addCategory() { 
-        menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); 
-        render(); 
-        setTimeout(() => {
-            const container = document.getElementById('admin-container');
-            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-        }, 50);
-    }
-
-    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
 
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu.json'; a.click();
     }
 
+    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
+    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
+    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
+    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
     function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
+    function toggleTheme() { document.body.classList.toggle('dark'); }
+
     init();
 </script>
 </body>
