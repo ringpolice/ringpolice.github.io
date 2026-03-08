@@ -2,7 +2,7 @@
 
 :root {
     --gold: #caa74c;
-    --transition: all 0.3s ease;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --font-heading: 'Montserrat', sans-serif;
     --font-body: 'Inter', sans-serif;
 }
@@ -14,7 +14,7 @@ body:not(.dark) {
     --text-muted: #64748b;
     --btn-bg: #f1f5f9;
     --btn-text: #caa74c;
-    --border: rgba(0, 0, 0, 0.1);
+    --border: rgba(0, 0, 0, 0.08);
 }
 
 body.dark { 
@@ -23,7 +23,7 @@ body.dark {
     --text-muted: #94a3b8;
     --btn-bg: #1e293b;
     --btn-text: #caa74c;
-    --border: rgba(202, 167, 76, 0.2);
+    --border: rgba(202, 167, 76, 0.15);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,24 +38,59 @@ body {
     justify-content: center;
     align-items: center;
     padding: 20px;
-    transition: var(--transition);
 }
 
 .container {
     width: 95vw;
-    max-width: 1100px;
+    max-width: 1150px;
     height: 90vh;
     background: var(--card);
     border: 2px solid var(--gold);
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
     position: relative;
+    transition: var(--transition);
 }
 
-/* --- BUTTONS --- */
+/* --- RESTORED CONTROLS --- */
+.controls { 
+    position: absolute; 
+    right: 25px; 
+    top: 25px; 
+    display: flex; 
+    gap: 18px; 
+    z-index: 100; 
+}
+.control-btn { 
+    cursor: pointer; 
+    color: var(--gold); 
+    font-size: 1.25rem; 
+    transition: var(--transition); 
+    opacity: 0.8;
+}
+.control-btn:hover { 
+    opacity: 1; 
+    transform: scale(1.15) rotate(5deg); 
+}
+
+/* --- MENU GRID (INDEX) --- */
+.menu-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
+    gap: 40px; 
+    overflow-y: auto;
+    padding-right: 15px;
+}
+.menu-grid::-webkit-scrollbar { width: 6px; }
+.menu-grid::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
+
+.item-main { display: flex; justify-content: space-between; align-items: baseline; }
+.item-dots { flex: 1; border-bottom: 1px dotted var(--gold); margin: 0 12px; opacity: 0.25; }
+
+/* --- ADMIN UI & PRICE SPINNERS --- */
 .btn, #saveBtn { 
     font-family: var(--font-heading);
     font-weight: 700;
@@ -63,31 +98,23 @@ body {
     letter-spacing: 1px;
     padding: 12px 20px;
     cursor: pointer;
-    border-radius: 6px; 
+    border-radius: 8px; 
     border: 2px solid var(--gold); 
     background: var(--btn-bg) !important;
     color: var(--btn-text) !important;
     transition: var(--transition);
 }
 
-.btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
-
-/* --- PRICE INPUTS (Hiding Spinners) --- */
 .price-input::-webkit-outer-spin-button,
-.price-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-.price-input[type=number] {
-    -moz-appearance: textfield;
-}
+.price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.price-input[type=number] { -moz-appearance: textfield; }
 
 .price-editor {
     display: flex;
     align-items: center;
     border: 1px solid var(--gold);
-    border-radius: 4px;
-    padding: 4px 8px;
+    border-radius: 6px;
+    padding: 4px 10px;
     background: var(--btn-bg);
 }
 
@@ -99,14 +126,7 @@ body {
     width: 45px;
     text-align: right;
     outline: none;
+    font-family: var(--font-body);
 }
 
-/* --- ADMIN UI --- */
-.controls { position: absolute; right: 20px; top: 20px; display: flex; gap: 20px; z-index: 10; }
-.control-btn { cursor: pointer; color: var(--gold); font-size: 1.2rem; transition: var(--transition); }
-.control-btn:hover { transform: scale(1.2); }
-
-/* --- INDEX UI --- */
-.item-main { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; }
-.item-dots { flex: 1; border-bottom: 1px dotted var(--gold); margin: 0 10px; opacity: 0.3; }
-.item-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+.admin-input { width: 100%; border: none; background: transparent; color: inherit; outline: none; }
