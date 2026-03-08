@@ -2,117 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chef Console | Kitchen Administration</title>
+    <title>Chef Console | Admin</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body class="dark">
-<div class="container">
-    <div class="header">
+    <div class="container">
         <div class="controls">
             <i class="fa-solid fa-moon control-btn" onclick="document.body.classList.toggle('dark')"></i>
-            <i class="fa-solid fa-right-from-bracket control-btn" onclick="logout()"></i>
+            <i class="fa-solid fa-right-from-bracket control-btn" onclick="window.location.href='index.html'"></i>
         </div>
-        <img class="logo" src="logo.png" alt="VindexCraft">
-        <div style="color:var(--gold); font-family:'Montserrat'; font-size:10px; text-transform:uppercase; letter-spacing: 3px; font-weight:800;">Kitchen Administration Console</div>
-    </div>
-    
-    <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;">
+
+        <header style="text-align: center; margin-bottom: 30px;">
+            <img src="logo.png" alt="Logo" style="height: 60px; margin-bottom: 10px;">
+            <div style="color:var(--gold); font-family:'Montserrat'; font-size:10px; letter-spacing: 2px; font-weight:800;">KITCHEN ADMINISTRATION</div>
+        </header>
+
+        <div id="admin-container" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;">
+            </div>
+
+        <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid var(--border);">
+            <button class="btn" style="flex:1" onclick="addCategory()">+ NEW SECTION</button>
+            <button id="saveBtn" class="btn" style="flex:2" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
         </div>
-    
-    <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202,167,76,0.2);">
-        <button class="btn" style="flex:1;" onclick="addCategory()">+ New Section</button>
-        <button id="saveBtn" class="btn" style="flex:2;" onclick="downloadJSON()">Save & Download Menu.json</button>
     </div>
-</div>
 
-<script>
-    if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
-    let menuData = null;
+    <script>
+        let menuData = null;
 
-    async function init() {
-        try {
-            const res = await fetch('./menu.json?v=' + Date.now());
+        async function init() {
+            const res = await fetch('menu.json');
             menuData = await res.json();
             render();
-        } catch (e) { console.error("Load failed", e); }
-    }
+        }
 
-    function render() {
-        const container = document.getElementById('admin-container');
-        container.innerHTML = '';
-        menuData.categories.forEach(cat => {
-            const section = document.createElement('div');
-            section.className = 'admin-section';
-            section.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <i class="fa-solid fa-grip section-handle" style="cursor:grab; opacity:0.3; color:var(--gold);"></i>
-                        <input class="admin-input" style="font-family:'Montserrat'; font-weight:700; font-size:1.1rem; text-transform:uppercase;" value="${cat.title}" onchange="markUnsaved()">
+        function render() {
+            const container = document.getElementById('admin-container');
+            container.innerHTML = '';
+            menuData.categories.forEach((cat, cIdx) => {
+                const sec = document.createElement('div');
+                sec.className = 'admin-section';
+                sec.style.marginBottom = "30px";
+                sec.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <input class="admin-input" style="font-family:var(--font-heading); font-weight:700; color:var(--gold); border:none; background:transparent; font-size:1.1rem; outline:none;" value="${cat.title}">
+                        <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="this.parentElement.parentElement.remove()"></i>
                     </div>
-                    <i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer;" onclick="this.closest('.admin-section').remove(); markUnsaved();"></i>
-                </div>
-                <div class="items-list">
-                    ${cat.items.map(item => createItemHTML(item)).join('')}
-                </div>
-                <button class="btn" style="font-size:0.7rem; margin-top:15px; padding:8px 16px;" onclick="addItem(this)">+ Add Dish</button>
-            `;
-            container.appendChild(section);
-            new Sortable(section.querySelector('.items-list'), { group: 'shared', handle: '.grip-handle', animation: 150, onEnd: markUnsaved });
-        });
-        new Sortable(container, { handle: '.section-handle', animation: 200, onEnd: markUnsaved });
-    }
-
-    function createItemHTML(item) {
-        return `
-            <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px; padding:15px; background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
-                <i class="fa-solid fa-grip-vertical grip-handle" style="cursor:grab; opacity:0.2;"></i>
-                <div style="flex-grow:1;">
-                    <input class="admin-input" style="font-weight:600;" value="${item.name || 'New Item'}" onchange="markUnsaved()">
-                    <input class="admin-input" style="font-size:0.85rem; opacity:0.6;" value="${item.desc || 'Description'}" onchange="markUnsaved()">
-                </div>
-                <div class="price-editor">
-                    <span style="color:var(--gold); font-size:0.8rem; margin-right:5px; font-weight:800;">$</span>
-                    <input type="number" class="price-input" value="${item.price || 0}" onchange="markUnsaved()">
-                </div>
-                <i class="fa-solid fa-xmark" style="color:#ef4444; cursor:pointer; font-size:1.1rem;" onclick="this.parentElement.remove(); markUnsaved();"></i>
-            </div>`;
-    }
-
-    function markUnsaved() { document.getElementById('saveBtn').classList.add('unsaved'); }
-    function clearUnsaved() { document.getElementById('saveBtn').classList.remove('unsaved'); }
-    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
-
-    function syncData() {
-        const categories = [];
-        document.querySelectorAll('.admin-section').forEach(sec => {
-            const items = [];
-            sec.querySelectorAll('.admin-input[style*="font-weight:600"]').forEach((input) => {
-                const parent = input.closest('div').parentElement;
-                items.push({
-                    name: input.value,
-                    desc: parent.querySelectorAll('.admin-input')[1].value,
-                    price: parseInt(parent.querySelector('.price-input').value) || 0,
-                    icon: "fa-utensils"
-                });
+                    <div class="items-list">
+                        ${cat.items.map(item => `
+                            <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px; background:var(--btn-bg); padding:12px; border-radius:8px;">
+                                <div style="flex-grow:1;">
+                                    <input class="admin-input" style="font-weight:600; width:100%; border:none; background:transparent; color:inherit; outline:none;" value="${item.name}">
+                                    <input class="admin-input" style="font-size:0.85rem; opacity:0.6; width:100%; border:none; background:transparent; color:inherit; outline:none;" value="${item.desc}">
+                                </div>
+                                <div class="price-editor">
+                                    <span style="color:var(--gold); margin-right:5px; font-weight:bold;">$</span>
+                                    <input type="number" class="price-input" value="${item.price}">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(sec);
             });
-            categories.push({ title: sec.querySelector('.admin-input').value, icon: "fa-utensils", items: items });
-        });
-        menuData.categories = categories;
-    }
+        }
 
-    function downloadJSON() {
-        syncData();
-        const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'menu.json';
-        a.click();
-        clearUnsaved();
-    }
+        function downloadJSON() {
+            // Re-sync logic would go here
+            const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'menu.json';
+            a.click();
+        }
 
-    window.onload = init;
-</script>
+        window.onload = init;
+    </script>
 </body>
 </html>
