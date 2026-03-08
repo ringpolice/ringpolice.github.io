@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Dining Menu | VindexCraft</title>
-    
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,91 +13,58 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <div class="control-btn" onclick="toggleTheme()" title="Toggle Theme">
-                <i id="themeIcon" class="fa-solid fa-moon"></i>
-            </div>
-            <a href="admin.html" class="control-btn" title="Chef Admin">
-                <i class="fa-solid fa-utensils"></i>
-            </a>
+            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
+            <a href="admin.html" class="control-btn"><i class="fa-solid fa-user-gear"></i></a>
         </div>
-        
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png" alt="State Logo">
-        <div class="subtitle">State Dining Service</div>
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <div class="subtitle">VindexCraft State Dining Service</div>
     </div>
 
-    <div class="menu-list" id="menu-container">
+    <div class="menu-grid" id="menu-container">
         </div>
 
-    <div class="footer">
-        VINDEXCRAFT • OFFICIAL STATE DINING • EST. 2024
-    </div>
+    <div class="footer">State Dining Service • VindexCraft</div>
 </div>
 
 <script>
-    /**
-     * Fetches the menu data and builds the HTML structure dynamically.
-     * Restores the centered, single-column aesthetic.
-     */
     async function loadMenu() {
         try {
             const response = await fetch('menu.json');
-            if (!response.ok) throw new Error('menu.json not found');
             const data = await response.json();
             const container = document.getElementById('menu-container');
 
-            // Clear container before loading
-            container.innerHTML = '';
+            data.categories.forEach((cat, index) => {
+                const card = document.createElement('div');
+                card.className = 'menu-card fade-in-item';
+                // Staggered delay for each card
+                card.style.animationDelay = `${index * 0.15}s`;
 
-            data.categories.forEach(cat => {
-                const section = document.createElement('div');
-                section.className = 'category-section';
-
-                // Create the ornate category title
-                let html = `<div class="category-title">${cat.title}</div>`;
+                let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
 
                 cat.items.forEach(item => {
-                    // Only render items that have at least a name
-                    if (item.name.trim() !== "") {
-                        html += `
-                            <div class="menu-item">
-                                <div class="item-main">
-                                    <span class="item-name">
-                                        ${item.icon ? `<i class="fa-solid ${item.icon}"></i>` : ''}
-                                        ${item.name}
-                                    </span>
-                                    <span class="item-price">${item.price}</span>
-                                </div>
-                                ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
-                            </div>`;
-                    }
+                    html += `
+                        <div class="menu-item">
+                            <div class="item-main">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-price">${item.price}</span>
+                            </div>
+                            ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
+                        </div>`;
                 });
 
-                section.innerHTML = html;
-                container.appendChild(section);
+                card.innerHTML = html;
+                container.appendChild(card);
             });
-        } catch (err) {
-            console.error("Layout Error:", err);
-            document.getElementById('menu-container').innerHTML = 
-                "<p style='text-align:center; color:var(--gold);'>Our chefs are currently updating the menu. Please check back shortly.</p>";
-        }
+        } catch (e) { console.error("Menu load failed", e); }
     }
 
-    /**
-     * Dark Mode Toggle
-     */
     function toggleTheme(){
         document.body.classList.toggle("dark");
         const icon = document.getElementById("themeIcon");
-        if(document.body.classList.contains("dark")){
-            icon.classList.replace("fa-moon", "fa-sun");
-        } else {
-            icon.classList.replace("fa-sun", "fa-moon");
-        }
+        icon.classList.toggle("fa-moon"); icon.classList.toggle("fa-sun");
     }
 
-    // Initialize
     loadMenu();
 </script>
-
 </body>
 </html>
