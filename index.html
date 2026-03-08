@@ -44,7 +44,6 @@
     }
 
     async function loadMenu() {
-        // Cache buster ?v= ensures GitHub Pages serves fresh data
         const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
         const data = await response.json();
         window.cachedUsers = data.users;
@@ -69,7 +68,7 @@
         const p = document.getElementById('password').value;
         const user = window.cachedUsers.find(user => user.username === u && user.password === p);
         if (user) { sessionStorage.setItem('authenticated', 'true'); window.location.href = 'admin.html'; }
-        else { alert("Invalid login."); }
+        else { alert("Access Denied."); }
     }
     loadMenu();
 </script>
