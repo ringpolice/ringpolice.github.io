@@ -25,7 +25,7 @@ body {
 
 .header { text-align: center; margin-bottom: 30px; flex-shrink: 0; }
 .logo { height: 80px; width: auto; margin-bottom: 10px; }
-.subtitle { font-family: "Playfair Display", serif; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; font-size: 12px; }
+.subtitle { font-family: "Playfair Display", serif; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; font-size: 11px; }
 
 /* PUBLIC MENU GRID */
 #menu-grid { 
@@ -55,18 +55,18 @@ body {
 /* ADMIN SPECIFIC LAYOUT */
 .admin-section-card { 
     background: rgba(202, 167, 76, 0.05) !important; border: 1px solid var(--gold) !important; 
-    border-radius: 8px; padding: 20px; margin-bottom: 30px; display: block !important;
+    border-radius: 8px; padding: 20px; margin-bottom: 30px;
 }
 
 .admin-item-box { 
     background: var(--card) !important; border: 1px solid rgba(202, 167, 76, 0.3) !important; 
-    padding: 15px !important; margin-bottom: 15px !important; border-radius: 6px;
+    padding: 15px !important; margin-bottom: 12px !important; border-radius: 6px;
 }
 
 .item-row { 
     display: grid !important; 
-    grid-template-columns: 40px 1fr 120px 50px !important; 
-    gap: 10px; align-items: center; 
+    grid-template-columns: 30px 1fr 100px 40px !important; 
+    gap: 15px; align-items: center; 
 }
 
 .admin-input { 
@@ -75,9 +75,9 @@ body {
     color: inherit !important; font-family: inherit; font-size: 14px; outline: none;
 }
 
+/* BUTTONS & CONTROLS */
 .controls { position: absolute; right: 20px; top: 20px; display: flex; gap: 15px; z-index: 100; }
 .control-btn { cursor: pointer; color: var(--gold); font-size: 20px; }
-
-.btn { padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; border: 1px solid transparent; font-family: inherit; }
-.btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); width: 100%; margin-top: 20px; }
-.btn-add { color: var(--green); border: 1px solid var(--green); background: transparent; margin-top: 10px; }
+.btn { padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; border: 1px solid transparent; font-family: inherit; transition: 0.2s; }
+.btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); width: 100%; }
+.btn-add { color: var(--green); border: 1px solid var(--green); background: transparent; }
