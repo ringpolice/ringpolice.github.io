@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Dining Menu</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -13,7 +13,7 @@
 <div class="container">
     <div class="controls">
         <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-        <a href="admin.html" class="control-btn"><i class="fa-solid fa-user-shield"></i></a>
+        <a href="admin.html" class="control-btn" title="Chef Admin"><i class="fa-solid fa-user-tie"></i></a>
     </div>
 
     <div class="header">
@@ -35,18 +35,24 @@
             data.categories.forEach((cat) => {
                 const card = document.createElement('div');
                 card.className = 'menu-card';
+                
                 let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
+                
                 cat.items.forEach(item => {
                     html += `
                         <div class="menu-item">
-                            <div class="item-main"><span>${item.name}</span><span class="item-price">${item.price}</span></div>
-                            <span class="item-desc">${item.desc}</span>
+                            <div class="item-header">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-leader"></span>
+                                <span class="item-price">${item.price}</span>
+                            </div>
+                            ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
                         </div>`;
                 });
                 card.innerHTML = html;
                 container.appendChild(card);
             });
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Data error:", e); }
     }
 
     function toggleTheme(){
