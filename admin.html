@@ -14,12 +14,11 @@
         </div>
 
         <header style="text-align: center; margin-bottom: 30px;">
-            <img src="logo.png" alt="Logo" style="height: 60px; margin-bottom: 10px;">
-            <div style="color:var(--gold); font-family:'Montserrat'; font-size:10px; letter-spacing: 2px; font-weight:800;">KITCHEN ADMINISTRATION</div>
+            <img src="logo.png" alt="Logo" style="height: 65px; margin-bottom: 10px;">
+            <div style="color:var(--gold); font-family:'Montserrat'; font-size:11px; letter-spacing: 3px; font-weight:800; text-transform:uppercase;">Administration Panel</div>
         </header>
 
-        <div id="admin-container" style="overflow-y: auto; flex-grow: 1; padding-right: 10px;">
-            </div>
+        <div id="admin-container" style="overflow-y: auto; flex-grow: 1; padding-right: 15px;"></div>
 
         <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid var(--border);">
             <button class="btn" style="flex:1" onclick="addCategory()">+ NEW SECTION</button>
@@ -31,44 +30,79 @@
         let menuData = null;
 
         async function init() {
-            const res = await fetch('menu.json');
-            menuData = await res.json();
-            render();
+            try {
+                const res = await fetch('menu.json?v=' + Date.now());
+                menuData = await res.json();
+                render();
+            } catch (e) { menuData = { categories: [] }; render(); }
         }
 
         function render() {
             const container = document.getElementById('admin-container');
             container.innerHTML = '';
-            menuData.categories.forEach((cat, cIdx) => {
-                const sec = document.createElement('div');
-                sec.className = 'admin-section';
-                sec.style.marginBottom = "30px";
-                sec.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <input class="admin-input" style="font-family:var(--font-heading); font-weight:700; color:var(--gold); border:none; background:transparent; font-size:1.1rem; outline:none;" value="${cat.title}">
-                        <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="this.parentElement.parentElement.remove()"></i>
-                    </div>
-                    <div class="items-list">
-                        ${cat.items.map(item => `
-                            <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px; background:var(--btn-bg); padding:12px; border-radius:8px;">
-                                <div style="flex-grow:1;">
-                                    <input class="admin-input" style="font-weight:600; width:100%; border:none; background:transparent; color:inherit; outline:none;" value="${item.name}">
-                                    <input class="admin-input" style="font-size:0.85rem; opacity:0.6; width:100%; border:none; background:transparent; color:inherit; outline:none;" value="${item.desc}">
-                                </div>
-                                <div class="price-editor">
-                                    <span style="color:var(--gold); margin-right:5px; font-weight:bold;">$</span>
-                                    <input type="number" class="price-input" value="${item.price}">
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                container.appendChild(sec);
+            menuData.categories.forEach(cat => {
+                container.appendChild(createSectionElement(cat.title, cat.items));
             });
         }
 
+        function createSectionElement(title = "NEW SECTION", items = []) {
+            const sec = document.createElement('div');
+            sec.className = 'admin-section';
+            sec.style.marginBottom = "30px";
+            sec.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; align-items:center;">
+                    <input class="admin-input cat-title" style="font-family:var(--font-heading); font-weight:700; color:var(--gold); font-size:1.1rem;" value="${title}">
+                    <i class="fa-solid fa-trash" style="color:#ef4444; cursor:pointer;" onclick="this.closest('.admin-section').remove()"></i>
+                </div>
+                <div class="items-list">${items.map(item => createItemHTML(item)).join('')}</div>
+                <button class="btn" style="font-size:0.7rem; padding:8px 12px; margin-top:10px; border-style:dashed;" onclick="addItem(this)">+ ADD DISH</button>`;
+            return sec;
+        }
+
+        function createItemHTML(item = { name: "Dish Name", desc: "Description", price: 0 }) {
+            return `
+                <div class="admin-item-box" style="display:flex; align-items:center; gap:15px; margin-bottom:10px; background:var(--btn-bg); padding:10px; border-radius:8px;">
+                    <div style="flex-grow:1;">
+                        <input class="admin-input item-name" style="font-weight:600;" value="${item.name}">
+                        <input class="admin-input item-desc" style="font-size:0.8rem; opacity:0.6;" value="${item.desc}">
+                    </div>
+                    <div class="price-editor">
+                        <span style="color:var(--gold); font-weight:bold; margin-right:4px;">$</span>
+                        <input type="number" class="price-input" value="${item.price}">
+                    </div>
+                    <i class="fa-solid fa-xmark" style="color:#ef4444; cursor:pointer;" onclick="this.parentElement.remove()"></i>
+                </div>`;
+        }
+
+        function addCategory() {
+            document.getElementById('admin-container').appendChild(createSectionElement());
+        }
+
+        function addItem(btn) {
+            const list = btn.parentElement.querySelector('.items-list');
+            const temp = document.createElement('div');
+            temp.innerHTML = createItemHTML();
+            list.appendChild(temp.firstElementChild);
+        }
+
+        function syncData() {
+            const categories = [];
+            document.querySelectorAll('.admin-section').forEach(sec => {
+                const items = [];
+                sec.querySelectorAll('.admin-item-box').forEach(box => {
+                    items.push({
+                        name: box.querySelector('.item-name').value,
+                        desc: box.querySelector('.item-desc').value,
+                        price: parseInt(box.querySelector('.price-input').value) || 0
+                    });
+                });
+                categories.push({ title: sec.querySelector('.cat-title').value, items });
+            });
+            menuData.categories = categories;
+        }
+
         function downloadJSON() {
-            // Re-sync logic would go here
+            syncData();
             const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
