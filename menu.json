@@ -7,8 +7,8 @@
       "title": "Starters",
       "icon": "fa-seedling",
       "items": [
-        { "name": "Artisan Prawn Cocktail", "price": "$14", "desc": "Chilled tiger prawns with a zesty horseradish foam.", "icon": "fa-shrimp" },
-        { "name": "Truffle Arancini", "price": "$12", "desc": "Crispy risotto balls with wild mushrooms.", "icon": "fa-circle" }
+        { "name": "Artisan Prawn Cocktail", "price": 14, "desc": "Chilled tiger prawns with a zesty horseradish foam.", "icon": "fa-shrimp" },
+        { "name": "Truffle Arancini", "price": 12, "desc": "Crispy risotto balls with wild mushrooms.", "icon": "fa-circle" }
       ]
     },
     {
@@ -16,31 +16,31 @@
       "icon": "fa-utensils",
       "featured": true,
       "items": [
-        { "name": "Herb-Crusted Rack of Lamb", "price": "$38", "desc": "Served with red wine reduction and seasonal root vegetables.", "icon": "fa-drumstick-bite" },
-        { "name": "Pan-Seared Sea Bass", "price": "$32", "desc": "With lemon butter sauce and fresh asparagus.", "icon": "fa-fish" }
+        { "name": "Herb-Crusted Rack of Lamb", "price": 38, "desc": "Served with red wine reduction and seasonal root vegetables.", "icon": "fa-drumstick-bite" },
+        { "name": "Pan-Seared Sea Bass", "price": 32, "desc": "With lemon butter sauce and fresh asparagus.", "icon": "fa-fish" }
       ]
     },
     {
       "title": "Sides",
       "icon": "fa-plate-wheat",
       "items": [
-        { "name": "Truffle Mash", "price": "$9", "desc": "Creamy potatoes infused with black truffle oil.", "icon": "fa-leaf" },
-        { "name": "Honey Glazed Carrots", "price": "$7", "desc": "Local organic carrots with wildflower honey." }
+        { "name": "Truffle Mash", "price": 9, "desc": "Creamy potatoes infused with black truffle oil.", "icon": "fa-leaf" },
+        { "name": "Honey Glazed Carrots", "price": 7, "desc": "Local organic carrots with wildflower honey." }
       ]
     },
     {
       "title": "Desserts",
       "icon": "fa-cake-candles",
       "items": [
-        { "name": "Gold-Leaf Fondant", "price": "$12", "desc": "Rich dark chocolate with edible 24k gold leaf.", "icon": "fa-cookie" }
+        { "name": "Gold-Leaf Fondant", "price": 12, "desc": "Rich dark chocolate with edible 24k gold leaf.", "icon": "fa-cookie" }
       ]
     },
     {
       "title": "Drinks",
       "icon": "fa-glass-water",
       "items": [
-        { "name": "Vintage Reserve", "price": "$15", "desc": "A selection of our finest cellar offerings." },
-        { "name": "Sparkling Nectar", "price": "$8", "desc": "Freshly pressed fruit with light carbonation." }
+        { "name": "Vintage Reserve", "price": 15, "desc": "A selection of our finest cellar offerings." },
+        { "name": "Sparkling Nectar", "price": 8, "desc": "Freshly pressed fruit with light carbonation." }
       ]
     }
   ]
