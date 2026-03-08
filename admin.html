@@ -39,7 +39,8 @@
 
     let menuData = null;
     let saveTimeout;
-    let draggedInfo = null;
+    let draggedItemInfo = null;
+    let draggedSectionIdx = null;
 
     async function init() {
         const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
@@ -65,23 +66,38 @@
         menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'admin-section-card';
+            section.draggable = true;
+
+            // Section Drag Events
+            section.ondragstart = (e) => {
+                if (e.target.className.includes('admin-section-card')) {
+                    draggedSectionIdx = cIdx;
+                    e.target.style.opacity = "0.4";
+                }
+            };
             section.ondragover = (e) => e.preventDefault();
-            section.ondrop = (e) => handleDrop(e, cIdx);
-            
+            section.ondrop = (e) => {
+                e.preventDefault();
+                if (draggedSectionIdx !== null) handleSectionDrop(draggedSectionIdx, cIdx);
+                else handleItemDrop(e, cIdx);
+            };
+            section.ondragend = (e) => { e.target.style.opacity = "1"; draggedSectionIdx = null; };
+
             section.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div class="section-drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding: 0 5px;">
                     <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value, this)">
                     <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})">+ Add Dish</button>`;
+                <button class="btn btn-add" style="font-size:12px;" onclick="addItem(${cIdx})">+ Add Dish</button>`;
             
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
                 row.className = 'admin-item-box draggable-item';
                 row.draggable = true;
-                row.ondragstart = (e) => { draggedInfo = { cIdx, iIdx }; e.target.classList.add('dragging'); };
+                row.ondragstart = (e) => { e.stopPropagation(); draggedItemInfo = { cIdx, iIdx }; e.target.classList.add('dragging'); };
                 row.ondragend = (e) => e.target.classList.remove('dragging');
 
                 row.innerHTML = `
@@ -90,9 +106,7 @@
                         <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value, this)">
                         <div style="position:relative; flex:1; display:flex; align-items:center;">
                             <span style="position:absolute; left:5px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="text" class="admin-input" style="padding-left:18px;" value="${item.price}" 
-                                   onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)"
-                                   onkeydown="validateNum(event)">
+                            <input type="text" class="admin-input" style="padding-left:18px;" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)" onkeydown="validateNum(event)">
                         </div>
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
@@ -103,19 +117,25 @@
         });
     }
 
-    function validateNum(e) {
-        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 || (e.keyCode >= 35 && e.keyCode <= 40)) return;
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) e.preventDefault();
+    function handleSectionDrop(src, dest) {
+        if (src === dest) return;
+        const [moved] = menuData.categories.splice(src, 1);
+        menuData.categories.splice(dest, 0, moved);
+        showStatus('sync'); render(); setTimeout(() => showStatus('saved'), 600);
     }
 
-    function handleDrop(e, destC) {
-        e.preventDefault();
-        if (!draggedInfo) return;
-        const { cIdx, iIdx } = draggedInfo;
+    function handleItemDrop(e, destC) {
+        if (!draggedItemInfo) return;
+        const { cIdx, iIdx } = draggedItemInfo;
         const [moved] = menuData.categories[cIdx].items.splice(iIdx, 1);
         menuData.categories[destC].items.push(moved);
         showStatus('sync'); render(); setTimeout(() => showStatus('saved'), 600);
-        draggedInfo = null;
+        draggedItemInfo = null;
+    }
+
+    function validateNum(e) {
+        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 || (e.keyCode >= 35 && e.keyCode <= 40)) return;
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) e.preventDefault();
     }
 
     function updateItem(c, i, f, v, el) { 
@@ -145,9 +165,6 @@
         }, 50);
     }
 
-    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
-    
     function addCategory() { 
         menuData.categories.push({title: "New Section", items: []}); 
         render(); 
@@ -156,6 +173,9 @@
             container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
         }, 50);
     }
+
+    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
+    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
 
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
