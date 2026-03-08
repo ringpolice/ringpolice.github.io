@@ -16,7 +16,11 @@
         <div style="color:var(--gold); font-size:12px; text-transform:uppercase; letter-spacing: 2px;">Kitchen Administration Console</div>
     </div>
     
-    <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;"></div>
+    <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;">
+        <div style="text-align:center; color:var(--gold); margin-top:50px;">
+            <i class="fa-solid fa-spinner fa-spin"></i> Initializing Kitchen Console...
+        </div>
+    </div>
     
     <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202, 167, 76, 0.2);">
         <button class="btn" style="flex:1; border-color:var(--gold); color:var(--gold); background:transparent;" onclick="addCategory()">+ NEW SECTION</button>
@@ -25,18 +29,28 @@
 </div>
 
 <script>
-    // Security Check
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
     
     let menuData = null;
 
     async function init() {
-        const res = await fetch('./menu.json?v=' + Date.now());
-        menuData = await res.json();
-        render();
+        try {
+            // Added Cache-Busting to ensure it doesn't load an old version
+            const res = await fetch('./menu.json?v=' + Date.now());
+            if (!res.ok) throw new Error("Could not load menu.json");
+            
+            menuData = await res.json();
+            
+            // CRITICAL: The render call is now INSIDE the successful fetch
+            render(); 
+        } catch (err) {
+            document.getElementById('admin-container').innerHTML = 
+                `<div style="color:#ff4d4d; text-align:center; margin-top:50px;">Error loading menu data. Please ensure menu.json exists.</div>`;
+        }
     }
 
     function render() {
+        if (!menuData) return;
         const container = document.getElementById('admin-container');
         container.innerHTML = menuData.categories.map((cat, cIdx) => `
             <div style="margin-bottom:30px; border:1px solid var(--gold); padding:25px; border-radius:8px; background: rgba(202, 167, 76, 0.02);">
@@ -80,7 +94,8 @@
         a.click();
     }
     
-    init();
+    // Ensure init runs as soon as the window finishes loading
+    window.onload = init;
 </script>
 </body>
 </html>
