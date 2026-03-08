@@ -5,21 +5,21 @@
     <title>Chef Console | Kitchen Administration</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body class="dark">
 <div class="container">
     <div class="header">
-        <div style="position:absolute; right:20px; top:20px;">
-            <i class="fa-solid fa-right-from-bracket" onclick="logout()" style="cursor:pointer; color:var(--gold); font-size: 20px;" title="Logout"></i>
+        <div style="position:absolute; right:20px; top:20px; display: flex; gap: 20px;">
+            <i class="fa-solid fa-moon" onclick="toggleTheme()" style="cursor:pointer; color:var(--gold); font-size: 20px;"></i>
+            <i class="fa-solid fa-right-from-bracket" onclick="logout()" style="cursor:pointer; color:var(--gold); font-size: 20px;"></i>
         </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
         <div style="color:var(--gold); font-size:12px; text-transform:uppercase; letter-spacing: 2px;">Kitchen Administration Console</div>
     </div>
     
     <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;">
-        <div style="text-align:center; color:var(--gold); margin-top:50px;">
-            <i class="fa-solid fa-spinner fa-spin"></i> Initializing Kitchen Console...
-        </div>
+        <div style="text-align:center; color:var(--gold); margin-top:50px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
     </div>
     
     <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202, 167, 76, 0.2);">
@@ -34,57 +34,84 @@
     let menuData = null;
 
     async function init() {
-        try {
-            // Added Cache-Busting to ensure it doesn't load an old version
-            const res = await fetch('./menu.json?v=' + Date.now());
-            if (!res.ok) throw new Error("Could not load menu.json");
-            
-            menuData = await res.json();
-            
-            // CRITICAL: The render call is now INSIDE the successful fetch
-            render(); 
-        } catch (err) {
-            document.getElementById('admin-container').innerHTML = 
-                `<div style="color:#ff4d4d; text-align:center; margin-top:50px;">Error loading menu data. Please ensure menu.json exists.</div>`;
-        }
+        const res = await fetch('./menu.json?v=' + Date.now());
+        const data = await res.json();
+        menuData = data;
+        render();
     }
 
     function render() {
-        if (!menuData) return;
         const container = document.getElementById('admin-container');
-        container.innerHTML = menuData.categories.map((cat, cIdx) => `
-            <div style="margin-bottom:30px; border:1px solid var(--gold); padding:25px; border-radius:8px; background: rgba(202, 167, 76, 0.02);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid rgba(202, 167, 76, 0.2); padding-bottom: 10px;">
+        container.innerHTML = '';
+
+        menuData.categories.forEach((cat, cIdx) => {
+            const section = document.createElement('div');
+            section.className = 'admin-section';
+            section.dataset.id = cIdx;
+            section.style = "margin-bottom:30px; border:1px solid var(--gold); padding:25px; border-radius:8px; background: rgba(202,167,76,0.02); position:relative;";
+            
+            section.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                        <i class="fa-solid ${cat.icon || 'fa-folder'}" style="color: var(--gold);"></i>
-                        <input class="admin-input" style="font-size:20px; font-weight:bold; font-family: 'Playfair Display';" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
+                        <i class="fa-solid fa-grip section-handle" style="cursor:grab; color:var(--gold); opacity:0.4;"></i>
+                        <input class="admin-input" style="font-size:20px; font-weight:bold; font-family:'Playfair Display';" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
                     </div>
                     <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="removeCategory(${cIdx})"></i>
                 </div>
-                <div id="items-${cIdx}">${cat.items.map((item, iIdx) => `
-                    <div class="admin-item-box">
-                        <div class="item-row">
-                            <i class="fa-solid fa-grip-vertical" style="opacity:0.2;"></i>
-                            <div class="inputs-container">
-                                <input class="admin-input" style="font-weight:bold;" placeholder="Item Name" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value">
-                                <input class="admin-input" style="font-size:12px; opacity:0.7;" placeholder="Description" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value">
+                <div class="items-list" id="items-${cIdx}" data-cat-id="${cIdx}">
+                    ${cat.items.map((item, iIdx) => `
+                        <div class="admin-item-box" data-item-id="${iIdx}">
+                            <div class="item-row">
+                                <i class="fa-solid fa-grip-vertical grip-handle"></i>
+                                <div class="inputs-container">
+                                    <input class="admin-input" style="font-weight:bold;" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
+                                    <input class="admin-input" style="font-size:12px; opacity:0.7;" value="${item.desc}" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">
+                                </div>
+                                <div class="price-editor">
+                                    <span style="color:var(--gold); font-size:12px; margin-right:4px;">$</span>
+                                    <input type="number" class="price-input" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', parseInt(this.value))">
+                                </div>
+                                <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer; width:20px; text-align:right;" onclick="removeItem(${cIdx}, ${iIdx})"></i>
                             </div>
-                            <div class="price-container">
-                                <span style="color:var(--gold); font-weight: bold; margin-right:5px;">$</span>
-                                <input type="number" class="admin-input" style="text-align: right;" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value)">
-                            </div>
-                            <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer; width:20px; text-align:right; font-size: 18px;" onclick="removeItem(${cIdx}, ${iIdx})"></i>
                         </div>
-                    </div>`).join('')}</div>
-                <button class="btn" style="font-size:11px; color:var(--green); border-color:var(--green); background:transparent; margin-top:10px; border-style: dashed;" onclick="addItem(${cIdx})">+ ADD NEW DISH</button>
-            </div>`).join('');
+                    `).join('')}
+                </div>
+                <button class="btn" style="font-size:11px; color:var(--green); border-color:var(--green); background:transparent; margin-top:10px; border-style:dashed;" onclick="addItem(${cIdx})">+ ADD DISH</button>
+            `;
+            container.appendChild(section);
+
+            // Initialize Sortable for items within this section
+            new Sortable(section.querySelector('.items-list'), {
+                handle: '.grip-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: (evt) => {
+                    const catIdx = evt.from.dataset.catId;
+                    const items = menuData.categories[catIdx].items;
+                    const item = items.splice(evt.oldIndex, 1)[0];
+                    items.splice(evt.newIndex, 0, item);
+                }
+            });
+        });
+
+        // Initialize Sortable for sections
+        new Sortable(container, {
+            handle: '.section-handle',
+            animation: 150,
+            onEnd: (evt) => {
+                const cats = menuData.categories;
+                const cat = cats.splice(evt.oldIndex, 1)[0];
+                cats.splice(evt.newIndex, 0, cat);
+                render(); // Re-render to update the internal indices
+            }
+        });
     }
 
-    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: 0, desc: "Item description...", icon: "fa-utensils"}); render(); }
+    function updateItem(c, i, field, val) { menuData.categories[c].items[i][field] = val; }
+    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: 0, desc: "Description..."}); render(); }
     function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
-    function removeCategory(c) { if(confirm("Permanently delete this section?")) { menuData.categories.splice(c,1); render(); } }
+    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
     function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
-    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
     
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
@@ -93,8 +120,10 @@
         a.download = 'menu.json';
         a.click();
     }
+
+    function toggleTheme() { document.body.classList.toggle('dark'); }
+    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
     
-    // Ensure init runs as soon as the window finishes loading
     window.onload = init;
 </script>
 </body>
