@@ -12,7 +12,6 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <a href="index.html" class="control-btn"><i class="fa-solid fa-arrow-left"></i> Exit</a>
             <div class="control-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
             <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
         </div>
@@ -28,14 +27,14 @@
 
     <div style="padding: 40px 0; border-top: 2px solid var(--gold); text-align: center; margin-top:40px;">
         <button class="btn btn-main" onclick="downloadJSON()">
-            <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD MENU.JSON
+            <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD UPDATED MENU.JSON
         </button>
-        <p style="margin-top:15px; font-size: 12px; font-style: italic;">Note: Upload this file to GitHub to apply changes.</p>
+        <p style="margin-top:15px; font-size: 12px; font-style: italic;">Download this file and replace the menu.json in your GitHub repository.</p>
     </div>
 </div>
 
 <script>
-    // Security Gate
+    // Security Gate: Redirect if not logged in
     if (sessionStorage.getItem('authenticated') !== 'true') {
         window.location.href = 'index.html';
     }
