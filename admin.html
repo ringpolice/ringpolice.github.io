@@ -29,12 +29,10 @@
         <button class="btn btn-main" onclick="downloadJSON()">
             <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD UPDATED MENU.JSON
         </button>
-        <p style="margin-top:15px; font-size: 12px; font-style: italic;">Download this file and replace the menu.json in your GitHub repository.</p>
     </div>
 </div>
 
 <script>
-    // Security Gate: Redirect if not logged in
     if (sessionStorage.getItem('authenticated') !== 'true') {
         window.location.href = 'index.html';
     }
@@ -42,11 +40,9 @@
     let menuData = null;
 
     async function init() {
-        try {
-            const response = await fetch('./menu.json');
-            menuData = await response.json();
-            render();
-        } catch (e) { console.error("Could not load data."); }
+        const response = await fetch('./menu.json');
+        menuData = await response.json();
+        render();
     }
 
     function render() {
@@ -57,14 +53,11 @@
             section.className = 'admin-section-card';
             section.innerHTML = `
                 <div style="display:flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px;">
-                    <div style="flex:1">
-                        <label style="font-size:11px; color:var(--gold); font-weight:bold;">SECTION TITLE</label>
-                        <input class="admin-input" style="font-size: 20px; font-weight: bold;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
-                    </div>
+                    <div style="flex:1"><input class="admin-input" style="font-size: 20px; font-weight: bold;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)"></div>
                     <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-solid fa-trash"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add Dish</button>`;
+                <button class="btn btn-add" onclick="addItem(${cIdx})">Add Dish</button>`;
             
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
@@ -72,8 +65,8 @@
                 row.className = 'admin-item-box';
                 row.innerHTML = `
                     <div style="display:flex; gap: 10px;">
-                        <div style="flex:3"><input class="admin-input" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)"></div>
-                        <div style="flex:1"><input class="admin-input" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)"></div>
+                        <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
+                        <input class="admin-input" style="flex:1" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
                     <textarea class="admin-input" style="height:60px" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
@@ -87,7 +80,7 @@
     function updateItem(c, i, f, v) { menuData.categories[c].items[i][f] = v; }
     function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
     function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c, 1); render(); } }
-    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: "$0", desc: ""}); render(); }
+    function addItem(c) { menuData.categories[c].items.push({name: "New", price: "0", desc: ""}); render(); }
     function removeItem(c, i) { menuData.categories[c].items.splice(i, 1); render(); }
 
     function downloadJSON() {
@@ -98,15 +91,8 @@
         a.download = 'menu.json';
         a.click();
     }
-
-    function logout() {
-        sessionStorage.removeItem('authenticated');
-        window.location.href = 'index.html';
-    }
-
-    function toggleTheme(){
-        document.body.classList.toggle("dark");
-    }
+    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
+    function toggleTheme(){ document.body.classList.toggle("dark"); }
     init();
 </script>
 </body>
