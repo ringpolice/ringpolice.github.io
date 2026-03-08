@@ -1,6 +1,8 @@
 :root {
     --navy: #16233b; --gold: #caa74c; --green: #2f7d36;
     --card: #ffffff; --text: #1c2430; --text-muted: #566573;
+    /* Added transition for smooth theme switching */
+    --transition: all 0.4s ease-in-out;
 }
 body.dark { --card: #111a2e; --text: #e8edf5; --text-muted: #aab4be; }
 
@@ -8,8 +10,16 @@ body.dark { --card: #111a2e; --text: #e8edf5; --text-muted: #aab4be; }
 
 body {
     background: #1a1a1a url('background.png') no-repeat center center fixed;
-    background-size: cover; color: var(--text); font-family: "Libre Baskerville", serif;
-    min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+    background-size: cover; 
+    color: var(--text); 
+    font-family: "Libre Baskerville", serif;
+    min-height: 100vh; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    padding: 20px;
+    /* Apply smooth transition */
+    transition: var(--transition);
 }
 
 .container {
@@ -17,10 +27,8 @@ body {
     background: var(--card) !important; border: 3px solid var(--gold); border-radius: 12px;
     padding: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
     position: relative; display: flex; flex-direction: column;
+    transition: var(--transition);
 }
-
-.header { text-align: center; margin-bottom: 30px; flex-shrink: 0; }
-.logo { height: 80px; width: auto; margin-bottom: 10px; }
 
 /* Admin Row Styling */
 .admin-item-box { 
@@ -30,7 +38,6 @@ body {
 
 .item-row { display: flex; align-items: center; gap: 15px; width: 100%; }
 .grip-handle { cursor: grab; color: var(--gold); opacity: 0.5; padding: 5px; }
-.grip-handle:active { cursor: grabbing; }
 
 .inputs-container { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
 
@@ -46,22 +53,19 @@ body {
     outline: none; font-size: 14px;
 }
 
-/* Hide spin buttons */
 .price-input::-webkit-outer-spin-button,
 .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-.admin-input { width: 100%; border: none; background: transparent; color: inherit; font-family: inherit; outline: none; }
+.admin-input { width: 100%; border: none; background: transparent; color: inherit; font-family: inherit; outline: none; transition: var(--transition); }
 .admin-input:focus { border-bottom: 1px solid var(--gold); }
 
 /* Public Menu Grid */
 #menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; overflow-y: auto; flex-grow: 1; }
-.menu-card { background: rgba(255,255,255,0.03); border-top: 3px solid var(--gold); padding: 20px; border-radius: 6px; }
+.menu-card { background: rgba(255,255,255,0.03); border-top: 3px solid var(--gold); padding: 20px; border-radius: 6px; transition: var(--transition); }
 .item-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; color: var(--gold); }
 .item-dots { flex: 1; border-bottom: 1px dotted rgba(202, 167, 76, 0.4); margin: 0 10px; }
 
 .btn { padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; border: 1px solid transparent; transition: 0.2s; }
 .btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); width: 100%; }
-.btn-main:hover { background: var(--gold); color: var(--navy); }
 
-/* Ghost element during drag */
 .sortable-ghost { opacity: 0.2; background: var(--gold) !important; }
