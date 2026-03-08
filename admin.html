@@ -12,61 +12,56 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-            <div class="control-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-house"></i></div>
+            <div class="control-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></div>
+            <div class="control-btn" onclick="logout()"><i class="fa-solid fa-house"></i></div>
         </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
         <div class="subtitle">Kitchen Administration Console</div>
     </div>
-    <div id="admin-container" style="overflow-y:auto; flex-grow:1;"></div>
-    <div style="flex-shrink:0; padding-top:20px;">
-        <button class="btn btn-add" style="width:100%; border-style:dashed;" onclick="addCategory()">+ Create New Menu Section</button>
+    <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right:10px;"></div>
+    <div style="padding-top:20px;">
+        <button class="btn btn-add" style="width:100%; border-style:dashed; margin-bottom:10px;" onclick="addCategory()">+ Create New Menu Section</button>
         <button class="btn btn-main" onclick="downloadJSON()">DOWNLOAD MENU.JSON</button>
     </div>
 </div>
+
 <script>
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
     let menuData = null;
+
     async function init() {
         const response = await fetch(`./menu.json?v=${Date.now()}`);
         menuData = await response.json();
         render();
     }
+
     function render() {
         const container = document.getElementById('admin-container');
-        container.innerHTML = '';
-        menuData.categories.forEach((cat, cIdx) => {
-            const section = document.createElement('div');
-            section.className = 'admin-section-card';
-            section.innerHTML = `
-                <div style="display:flex; align-items:center; margin-bottom:20px; gap:15px; border-bottom:1px solid var(--gold); padding-bottom:10px;">
-                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
-                    <button class="btn" style="color:#c0392b; background:transparent;" onclick="removeCategory(${cIdx})"><i class="fa-trash"></i></button>
+        container.innerHTML = menuData.categories.map((cat, cIdx) => `
+            <div class="admin-section-card">
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px; border-bottom:1px solid var(--gold); padding-bottom:10px;">
+                    <input class="admin-input" style="font-size:18px; font-weight:bold; flex:1;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
+                    <button onclick="removeCategory(${cIdx})" style="color:#ff4d4d; background:none; border:none; cursor:pointer;"><i class="fa-trash"></i></button>
                 </div>
-                <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" style="font-size:11px;" onclick="addItem(${cIdx})">+ Add Item</button>`;
-            const itemBox = section.querySelector(`#items-${cIdx}`);
-            cat.items.forEach((item, iIdx) => {
-                const row = document.createElement('div');
-                row.className = 'admin-item-box';
-                row.innerHTML = `
-                    <div class="item-row">
-                        <i class="fa-solid fa-grip-vertical" style="opacity:0.3;"></i>
-                        <div>
-                            <input class="admin-input" placeholder="Name" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value">
-                            <input class="admin-input" style="font-size:12px; opacity:0.7;" placeholder="Description" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value">
+                <div id="items-${cIdx}">${cat.items.map((item, iIdx) => `
+                    <div class="admin-item-box">
+                        <div class="item-row">
+                            <i class="fa-solid fa-grip-vertical" style="opacity:0.3;"></i>
+                            <div>
+                                <input class="admin-input" style="font-weight:bold;" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value">
+                                <input class="admin-input" style="font-size:12px; opacity:0.7;" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:5px;">
+                                <span style="color:var(--gold);">$</span>
+                                <input type="number" class="admin-input" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value)">
+                            </div>
+                            <button onclick="removeItem(${cIdx}, ${iIdx})" style="color:#ff4d4d; background:none; border:none; cursor:pointer;">×</button>
                         </div>
-                        <div style="position:relative; display:flex; align-items:center;">
-                            <span style="color:var(--gold); margin-right:5px;">$</span>
-                            <input type="number" class="admin-input" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value)">
-                        </div>
-                        <button class="btn" style="color:#c0392b; background:transparent;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
-                    </div>`;
-                itemBox.appendChild(row);
-            });
-            container.appendChild(section);
-        });
+                    </div>`).join('')}</div>
+                <button class="btn btn-add" style="font-size:12px;" onclick="addItem(${cIdx})">+ Add Dish</button>
+            </div>`).join('');
     }
+
     function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
     function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
     function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
@@ -75,6 +70,7 @@
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu.json'; a.click();
     }
+    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
     function toggleTheme() { document.body.classList.toggle('dark'); }
     init();
 </script>
