@@ -1,379 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>State Dining Menu</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville&display=swap" rel="stylesheet">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<style>
-
-:root{
-
---navy:#16233b;
---gold:#caa74c;
---green:#2f7d36;
-
---bg:#f4f5f7;
---card:#ffffff;
---text:#1c2430;
-
---paper:
-repeating-linear-gradient(
-0deg,
-rgba(0,0,0,0.015),
-rgba(0,0,0,0.015) 2px,
-transparent 2px,
-transparent 4px
-);
-
-}
-
-body.dark{
-
---bg:#0f1724;
---card:#182338;
---text:#e8edf5;
-
---paper:
-repeating-linear-gradient(
-0deg,
-rgba(255,255,255,0.02),
-rgba(255,255,255,0.02) 2px,
-transparent 2px,
-transparent 4px
-);
-
-}
-
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-}
-
-body{
-
-background:var(--bg);
-color:var(--text);
-font-family:"Libre Baskerville",serif;
-padding:40px;
-transition:.35s;
-
-}
-
-.container{
-
-max-width:1050px;
-margin:auto;
-
-background:
-var(--paper),
-var(--card);
-
-border:3px solid var(--gold);
-border-radius:10px;
-
-padding:70px;
-
-box-shadow:0 20px 45px rgba(0,0,0,.18);
-
-}
-
-.header{
-text-align:center;
-position:relative;
-margin-bottom:60px;
-}
-
-.theme-toggle{
-
-position:absolute;
-right:0;
-top:0;
-
-cursor:pointer;
-font-size:18px;
-color:var(--navy);
-
-opacity:.8;
-transition:.25s;
-
-}
-
-body.dark .theme-toggle{
-color:#e8edf5;
-}
-
-.theme-toggle:hover{
-transform:scale(1.1);
-opacity:1;
-}
-
-.logo{
-
-width:320px;
-max-width:90%;
-margin-bottom:25px;
-
-}
-
-.subtitle{
-
-font-size:16px;
-opacity:.75;
-margin-top:6px;
-
-}
-
-.menu-grid{
-
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-gap:30px;
-
-}
-
-.menu-card{
-
-background:var(--card);
-padding:28px;
-border:1px solid rgba(0,0,0,.08);
-border-radius:8px;
-position:relative;
-
-transition:.3s;
-
-}
-
-.menu-card:before{
-
-content:"";
-position:absolute;
-top:0;
-left:0;
-width:100%;
-height:3px;
-background:var(--gold);
-
-}
-
-.menu-card:hover{
-
-transform:translateY(-5px);
-box-shadow:0 12px 25px rgba(0,0,0,.15);
-
-}
-
-.card-title{
-
-font-family:"Playfair Display",serif;
-font-size:22px;
-margin-bottom:16px;
-
-color:var(--navy);
-
-border-bottom:1px solid rgba(0,0,0,.1);
-padding-bottom:6px;
-
-display:flex;
-align-items:center;
-gap:10px;
-
-}
-
-body.dark .card-title{
-color:#e5ecfa;
-}
-
-.card-title i{
-color:var(--gold);
-}
-
-.menu-item{
-
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:12px;
-
-}
-
-.item-name{
-font-weight:600;
-display:flex;
-align-items:center;
-gap:8px;
-}
-
-.item-name i{
-color:var(--green);
-font-size:14px;
-width:16px;
-text-align:center;
-}
-
-.footer{
-
-text-align:center;
-margin-top:55px;
-padding-top:18px;
-border-top:1px solid rgba(0,0,0,.1);
-font-size:14px;
-opacity:.7;
-
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Dining Menu | VindexCraft</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --navy: #16233b; --gold: #caa74c; --green: #2f7d36;
+            --bg: #f4f5f7; --card: #ffffff; --text: #1c2430; --text-muted: #566573;
+            --paper: repeating-linear-gradient(0deg, rgba(0,0,0,0.015), rgba(0,0,0,0.015) 2px, transparent 2px, transparent 4px);
+        }
+
+        body.dark {
+            --bg: #0f1724; --card: #182338; --text: #e8edf5; --text-muted: #aab4be;
+            --paper: repeating-linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 2px, transparent 2px, transparent 4px);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Libre Baskerville", serif;
+            padding: 20px;
+            transition: background 0.35s, color 0.35s;
+        }
+
+        .container {
+            max-width: 800px; /* Narrower for better vertical reading */
+            margin: 20px auto;
+            background: var(--paper), var(--card);
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            padding: 60px 10%;
+            box-shadow: 0 15px 35px rgba(0,0,0,.12);
+        }
+
+        .header { text-align: center; position: relative; margin-bottom: 80px; }
+
+        .theme-toggle {
+            position: absolute; right: -20px; top: -20px;
+            cursor: pointer; font-size: 18px; color: var(--gold);
+            padding: 10px; opacity: 0.6; transition: .25s;
+        }
+        .theme-toggle:hover { opacity: 1; }
+
+        .logo { width: 240px; max-width: 85%; margin-bottom: 15px; }
+
+        .subtitle {
+            font-family: "Playfair Display", serif;
+            font-size: 16px; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--gold);
+        }
+
+        /* Vertical List Layout */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+        }
+
+        .category-section {
+            width: 100%;
+            text-align: center;
+        }
+
+        .category-title {
+            font-family: "Playfair Display", serif;
+            font-size: 28px; font-weight: 700; margin-bottom: 30px;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        /* Decorative lines next to category title */
+        .category-title::before, .category-title::after {
+            content: "";
+            height: 1px;
+            width: 50px;
+            background: var(--gold);
+            opacity: 0.5;
+        }
+
+        body.dark .category-title { color: #ffffff; }
+
+        .menu-item { 
+            margin-bottom: 25px; 
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .item-main { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: baseline; 
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .item-name { display: flex; align-items: center; gap: 10px; }
+        .item-name i { color: var(--gold); font-size: 12px; width: 14px; }
+        
+        .item-price { 
+            font-family: "Playfair Display", serif; 
+            color: var(--gold);
+            margin-left: 15px;
+        }
+
+        .item-desc { 
+            font-size: 14px; 
+            font-style: italic; 
+            color: var(--text-muted); 
+            display: block; 
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center; margin-top: 80px; padding-top: 30px;
+            border-top: 1px double var(--gold);
+            font-size: 12px; letter-spacing: 2px; opacity: .7;
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 40px 5%; }
+            .item-main { flex-direction: column; align-items: center; text-align: center; }
+            .item-price { margin-left: 0; margin-top: 5px; }
+            .item-desc { text-align: center; padding-left: 0; }
+        }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
+    <div class="header">
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <i id="themeIcon" class="fa-solid fa-moon"></i>
+        </div>
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png" alt="Logo">
+        <div class="subtitle">State Dining Service</div>
+    </div>
 
-<div class="header">
+    <div class="menu-list" id="menu-container">
+        </div>
 
-<div class="theme-toggle" onclick="toggleTheme()">
-<i id="themeIcon" class="fa-solid fa-moon"></i>
-</div>
-
-<img class="logo"
-src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
-
-<div class="subtitle">VindexCraft State Dining Service</div>
-
-</div>
-
-<div class="menu-grid">
-
-<!-- STARTERS -->
-
-<div class="menu-card">
-
-<div class="card-title">
-<i class="fa-solid fa-seedling"></i>
-Starters
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-bowl-food"></i>Mac N' Cheese</span>
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-utensil-spoon"></i>Soup of the Day</span>
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-burger"></i>Sliders</span>
-</div>
-
-</div>
-
-<!-- SIDES -->
-
-<div class="menu-card">
-
-<div class="card-title">
-<i class="fa-solid fa-plate-wheat"></i>
-Sides
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-bread-slice"></i>Garlic Bread</span>
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-potato"></i>Baked Potato</span>
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-french-fries"></i>Steak Fries</span>
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-apple-whole"></i>Assorted Fruit</span>
-</div>
-
-<div class="menu-item">
-<span class="item-name"><i class="fa-solid fa-bowl-rice"></i>Bowl of Rice</span>
-</div>
-
-</div>
-
-<!-- ENTREES -->
-
-<div class="menu-card">
-
-<div class="card-title">
-<i class="fa-solid fa-utensils"></i>
-Entrées
-</div>
-
-<div class="menu-item">
-<span class="item-name">TBA</span>
-</div>
-
-</div>
-
-<!-- DESSERTS -->
-
-<div class="menu-card">
-
-<div class="card-title">
-<i class="fa-solid fa-cake-candles"></i>
-Desserts
-</div>
-
-<div class="menu-item">
-<span class="item-name">TBA</span>
-</div>
-
-</div>
-
-<!-- DRINKS -->
-
-<div class="menu-card">
-
-<div class="card-title">
-<i class="fa-solid fa-glass-water"></i>
-Drinks
-</div>
-
-<div class="menu-item">
-<span class="item-name">TBA</span>
-</div>
-
-</div>
-
-</div>
-
-<div class="footer">
-State Dining Service • VindexCraft
-</div>
-
+    <div class="footer">
+        VINDEXCRAFT • OFFICIAL STATE DINING • EST. 2024
+    </div>
 </div>
 
 <script>
+    async function loadMenu() {
+        try {
+            const response = await fetch('menu.json');
+            if (!response.ok) throw new Error('Could not load menu.json');
+            const data = await response.json();
+            const container = document.getElementById('menu-container');
 
-function toggleTheme(){
+            data.categories.forEach(cat => {
+                const section = document.createElement('div');
+                section.className = 'category-section';
 
-document.body.classList.toggle("dark")
+                let itemsHtml = `
+                    <div class="category-title">
+                        ${cat.title}
+                    </div>
+                `;
 
-const icon=document.getElementById("themeIcon")
+                cat.items.forEach(item => {
+                    itemsHtml += `
+                        <div class="menu-item">
+                            <div class="item-main">
+                                <span class="item-name">
+                                    ${item.icon ? `<i class="fa-solid ${item.icon}"></i>` : ''}
+                                    ${item.name}
+                                </span>
+                                <span class="item-price">${item.price}</span>
+                            </div>
+                            ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
+                        </div>
+                    `;
+                });
 
-if(document.body.classList.contains("dark")){
-icon.classList.remove("fa-moon")
-icon.classList.add("fa-sun")
-}else{
-icon.classList.remove("fa-sun")
-icon.classList.add("fa-moon")
-}
+                section.innerHTML = itemsHtml;
+                container.appendChild(section);
+            });
+        } catch (err) {
+            console.error(err);
+            document.getElementById('menu-container').innerHTML = "<p style='text-align:center;'>Unable to load menu data. Please check your JSON file.</p>";
+        }
+    }
 
-}
+    function toggleTheme(){
+        document.body.classList.toggle("dark");
+        const icon = document.getElementById("themeIcon");
+        icon.classList.toggle("fa-moon");
+        icon.classList.toggle("fa-sun");
+    }
 
+    loadMenu();
 </script>
 
 </body>
