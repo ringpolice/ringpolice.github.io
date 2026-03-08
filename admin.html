@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chef Console | State Dining Admin</title>
+    <title>Chef Console | Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -12,114 +12,84 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <a href="index.html" class="control-btn"><i class="fa-solid fa-arrow-left"></i> Return to Menu</a>
+            <a href="index.html" class="control-btn"><i class="fa-solid fa-arrow-left"></i> Exit</a>
+            <div class="control-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
             <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
         </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
-        <div class="subtitle">Chef's Administration Console</div>
+        <div class="subtitle">Kitchen Administration Console</div>
     </div>
 
     <div id="admin-container"></div>
 
-    <div style="text-align: center; margin: 30px 0;">
-        <button class="btn btn-add" style="width:100%; font-size: 16px; padding: 15px;" onclick="addCategory()">
-            <i class="fa-solid fa-plus-circle"></i> Create New Menu Section
-        </button>
-    </div>
+    <button class="btn btn-add" style="width:100%; font-size: 16px; padding: 15px; margin-top:20px;" onclick="addCategory()">
+        <i class="fa-solid fa-plus-circle"></i> Create New Menu Section
+    </button>
 
-    <div style="padding: 40px 0; border-top: 2px solid var(--gold); text-align: center;">
+    <div style="padding: 40px 0; border-top: 2px solid var(--gold); text-align: center; margin-top:40px;">
         <button class="btn btn-main" onclick="downloadJSON()">
-            <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD UPDATED MENU.JSON
+            <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD MENU.JSON
         </button>
-        <p style="margin-top:15px; font-size: 12px; font-style: italic;">Replacement of menu.json in your GitHub repository is required after export.</p>
+        <p style="margin-top:15px; font-size: 12px; font-style: italic;">Note: Upload this file to GitHub to apply changes.</p>
     </div>
-
-    <div class="footer">ADMINISTRATIVE ACCESS ONLY • VINDEXCRAFT</div>
 </div>
 
 <script>
-    let menuData = { categories: [] };
+    // Security Gate
+    if (sessionStorage.getItem('authenticated') !== 'true') {
+        window.location.href = 'index.html';
+    }
+
+    let menuData = null;
 
     async function init() {
         try {
             const response = await fetch('./menu.json');
             menuData = await response.json();
             render();
-        } catch (e) { console.log("Init failed, rendering empty editor."); render(); }
+        } catch (e) { console.error("Could not load data."); }
     }
 
     function render() {
         const container = document.getElementById('admin-container');
         container.innerHTML = '';
-
         menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'admin-section-card';
-            
             section.innerHTML = `
                 <div style="display:flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px;">
                     <div style="flex:1">
-                        <label class="input-label">Section Name</label>
-                        <input class="admin-input" style="font-size: 22px; font-weight: bold;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
+                        <label style="font-size:11px; color:var(--gold); font-weight:bold;">SECTION TITLE</label>
+                        <input class="admin-input" style="font-size: 20px; font-weight: bold;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
                     </div>
-                    <button class="btn btn-del" style="margin-bottom: 10px; margin-left: 15px;" onclick="removeCategory(${cIdx})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-solid fa-trash"></i></button>
                 </div>
-                <div id="items-box-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add Item to ${cat.title}</button>
-            `;
-
-            const itemContainer = section.querySelector(`#items-box-${cIdx}`);
+                <div id="items-${cIdx}"></div>
+                <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add Dish</button>`;
+            
+            const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
                 row.className = 'admin-item-box';
                 row.innerHTML = `
-                    <div style="display:flex; gap: 15px;">
-                        <div style="flex:3;">
-                            <label class="input-label">Dish Name</label>
-                            <input class="admin-input" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
-                        </div>
-                        <div style="flex:1;">
-                            <label class="input-label">Price</label>
-                            <input class="admin-input" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
-                        </div>
-                        <button class="btn btn-del" style="height: 35px; margin-top: 18px;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
+                    <div style="display:flex; gap: 10px;">
+                        <div style="flex:3"><input class="admin-input" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)"></div>
+                        <div style="flex:1"><input class="admin-input" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)"></div>
+                        <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <label class="input-label">Description</label>
-                    <textarea class="admin-input" style="height: 60px; border: 1px solid rgba(202, 167, 76, 0.3); border-radius: 4px;" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc || ''}</textarea>
-                `;
-                itemContainer.appendChild(row);
+                    <textarea class="admin-input" style="height:60px" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
+                itemBox.appendChild(row);
             });
             container.appendChild(section);
         });
     }
 
-    function updateCat(cIdx, val) { menuData.categories[cIdx].title = val; }
-    function updateItem(cIdx, iIdx, field, val) { menuData.categories[cIdx].items[iIdx][field] = val; }
-
-    function addCategory() {
-        menuData.categories.push({ title: "New Section", items: [] });
-        render();
-    }
-    function removeCategory(cIdx) {
-        if(confirm("Are you sure you want to delete this entire section?")) {
-            menuData.categories.splice(cIdx, 1);
-            render();
-        }
-    }
-    function addItem(cIdx) {
-        menuData.categories[cIdx].items.push({ name: "New Dish", price: "$0", desc: "" });
-        render();
-    }
-    function removeItem(cIdx, iIdx) {
-        menuData.categories[cIdx].items.splice(iIdx, 1);
-        render();
-    }
-
-    function toggleTheme(){
-        document.body.classList.toggle("dark");
-        const icon = document.getElementById("themeIcon");
-        icon.classList.toggle("fa-moon"); icon.classList.toggle("fa-sun");
-    }
+    function updateCat(c, v) { menuData.categories[c].title = v; }
+    function updateItem(c, i, f, v) { menuData.categories[c].items[i][f] = v; }
+    function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
+    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c, 1); render(); } }
+    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: "$0", desc: ""}); render(); }
+    function removeItem(c, i) { menuData.categories[c].items.splice(i, 1); render(); }
 
     function downloadJSON() {
         const data = JSON.stringify(menuData, null, 2);
@@ -130,6 +100,14 @@
         a.click();
     }
 
+    function logout() {
+        sessionStorage.removeItem('authenticated');
+        window.location.href = 'index.html';
+    }
+
+    function toggleTheme(){
+        document.body.classList.toggle("dark");
+    }
     init();
 </script>
 </body>
