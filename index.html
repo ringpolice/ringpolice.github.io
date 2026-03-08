@@ -11,8 +11,8 @@
 <div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
     <div style="background:var(--card); border:2px solid var(--gold); padding:40px; border-radius:12px; width:350px; text-align:center;">
         <h2 style="color:var(--gold); margin-bottom:25px; font-family:'Playfair Display';">Chef Login</h2>
-        <input type="text" id="user" placeholder="Username" style="width:100%; padding:12px; margin-bottom:10px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:white; border-radius:4px; outline:none;">
-        <input type="password" id="pass" placeholder="Password" style="width:100%; padding:12px; margin-bottom:20px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:white; border-radius:4px; outline:none;">
+        <input type="text" id="user" placeholder="Username" onkeydown="handleKey(event)" style="width:100%; padding:12px; margin-bottom:10px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:white; border-radius:4px; outline:none;">
+        <input type="password" id="pass" placeholder="Password" onkeydown="handleKey(event)" style="width:100%; padding:12px; margin-bottom:20px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:white; border-radius:4px; outline:none;">
         <button class="btn btn-main" onclick="handleLogin()">AUTHENTICATE</button>
         <p id="err" style="color:#ff4d4d; margin-top:15px; display:none; font-weight:bold;">Invalid Credentials</p>
         <button onclick="closeLogin()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; cursor:pointer;">Cancel</button>
@@ -34,6 +34,8 @@
 <script>
     function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+    
+    function handleKey(e) { if (e.key === "Enter") handleLogin(); }
 
     async function handleLogin() {
         const u = document.getElementById('user').value;
