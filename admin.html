@@ -2,60 +2,132 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chef Admin | State Dining</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Chef Console | Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <div class="container">
     <div class="header">
-        <div class="controls"><a href="index.html" class="control-btn"><i class="fa-solid fa-arrow-left"></i> Exit</a></div>
-        <h1>Kitchen Admin</h1>
-        <p>Modify Menu Sections & Pricing</p>
+        <div class="controls">
+            <a href="index.html" class="control-btn"><i class="fa-solid fa-arrow-left"></i> Return to Menu</a>
+            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
+        </div>
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <div class="subtitle">Kitchen Administration</div>
     </div>
 
-    <div id="admin-editor"></div>
+    <div id="admin-container"></div>
 
-    <button class="btn-save" onclick="exportJSON()">SAVE & DOWNLOAD MENU.JSON</button>
+    <button class="btn btn-add" style="width:100%; padding: 20px; font-size: 16px;" onclick="addCategory()">
+        <i class="fa-solid fa-plus-circle"></i> Add New Menu Section
+    </button>
+
+    <div style="text-align: center;">
+        <button class="btn btn-export" onclick="downloadJSON()">
+            <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD MENU.JSON
+        </button>
+        <p style="margin-top:15px; font-size: 13px; font-style: italic;">Note: You must upload the downloaded file to GitHub to see changes.</p>
+    </div>
+
+    <div class="footer">ADMINISTRATIVE ACCESS • VINDEXCRAFT</div>
 </div>
 
 <script>
-    let menuData = null;
+    let menuData = { categories: [] };
 
     async function init() {
-        const response = await fetch('./menu.json');
-        menuData = await response.json();
-        const container = document.getElementById('admin-editor');
+        try {
+            const response = await fetch('./menu.json');
+            menuData = await response.json();
+            render();
+        } catch (e) { 
+            console.log("Creating new menu structure.");
+            render();
+        }
+    }
+
+    function render() {
+        const container = document.getElementById('admin-container');
+        container.innerHTML = '';
 
         menuData.categories.forEach((cat, cIdx) => {
-            const div = document.createElement('div');
-            div.className = 'admin-card';
-            div.innerHTML = `<h3>Section: ${cat.title}</h3>`;
+            const section = document.createElement('div');
+            section.className = 'admin-section-card';
             
-            cat.items.forEach((item, iIdx) => {
-                div.innerHTML += `
-                    <div style="margin-top:20px; border-top:1px solid #ddd; padding-top:10px;">
-                        <input class="admin-input" value="${item.name}" onchange="update(${cIdx}, ${iIdx}, 'name', this.value)" placeholder="Name">
-                        <input class="admin-input" value="${item.price}" onchange="update(${cIdx}, ${iIdx}, 'price', this.value)" placeholder="Price">
-                        <textarea class="admin-input" onchange="update(${cIdx}, ${iIdx}, 'desc', this.value)" placeholder="Description">${item.desc}</textarea>
+            section.innerHTML = `
+                <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="flex:1">
+                        <label class="input-label">Section Title</label>
+                        <input class="admin-input" style="font-size: 20px; font-weight:bold;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
                     </div>
+                    <button class="btn btn-delete" style="margin-left: 20px;" onclick="removeCategory(${cIdx})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div id="items-container-${cIdx}"></div>
+                <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add Item to ${cat.title}</button>
+            `;
+
+            const itemContainer = section.querySelector(`#items-container-${cIdx}`);
+            cat.items.forEach((item, iIdx) => {
+                const itemRow = document.createElement('div');
+                itemRow.className = 'admin-item-row';
+                itemRow.innerHTML = `
+                    <div style="display:flex; gap: 15px;">
+                        <div style="flex:3;">
+                            <label class="input-label">Item Name</label>
+                            <input class="admin-input" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
+                        </div>
+                        <div style="flex:1;">
+                            <label class="input-label">Price</label>
+                            <input class="admin-input" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
+                        </div>
+                        <button class="btn btn-delete" style="height: 40px; margin-top: 22px;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
+                    </div>
+                    <label class="input-label">Description</label>
+                    <textarea class="admin-input" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc || ''}</textarea>
                 `;
+                itemContainer.appendChild(itemRow);
             });
-            container.appendChild(div);
+            container.appendChild(section);
         });
     }
 
-    function update(c, i, f, v) { menuData.categories[c].items[i][f] = v; }
+    function updateCat(cIdx, val) { menuData.categories[cIdx].title = val; }
+    function updateItem(cIdx, iIdx, field, val) { menuData.categories[cIdx].items[iIdx][field] = val; }
 
-    function exportJSON() {
+    function addCategory() {
+        menuData.categories.push({ title: "New Section", icon: "fa-utensils", items: [] });
+        render();
+    }
+    function removeCategory(cIdx) {
+        if(confirm("Delete this entire section?")) { menuData.categories.splice(cIdx, 1); render(); }
+    }
+    function addItem(cIdx) {
+        menuData.categories[cIdx].items.push({ name: "New Dish", price: "$0", desc: "" });
+        render();
+    }
+    function removeItem(cIdx, iIdx) {
+        menuData.categories[cIdx].items.splice(iIdx, 1);
+        render();
+    }
+
+    function toggleTheme(){
+        document.body.classList.toggle("dark");
+        const icon = document.getElementById("themeIcon");
+        icon.classList.toggle("fa-moon"); icon.classList.toggle("fa-sun");
+    }
+
+    function downloadJSON() {
         const data = JSON.stringify(menuData, null, 2);
         const blob = new Blob([data], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'menu.json';
         a.click();
-        alert("Downloaded! Upload this to your GitHub repo to go live.");
     }
+
     init();
 </script>
 </body>
