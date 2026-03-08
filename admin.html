@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Chef Console</title>
+    <meta charset="UTF-8">
+    <title>Chef Console | Kitchen Administration</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark">
 <div class="container">
     <div class="header">
-        <div style="position:absolute; right:20px; top:20px;"><i class="fa-solid fa-house" onclick="window.location.href='index.html'" style="cursor:pointer; color:var(--gold);"></i></div>
+        <div style="position:absolute; right:20px; top:20px;">
+            <i class="fa-solid fa-right-from-bracket" onclick="logout()" style="cursor:pointer; color:var(--gold); font-size: 20px;" title="Logout"></i>
+        </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
-        <div style="color:var(--gold); font-size:12px; text-transform:uppercase;">Kitchen Administration</div>
+        <div style="color:var(--gold); font-size:12px; text-transform:uppercase; letter-spacing: 2px;">Kitchen Administration Console</div>
     </div>
-    <div id="admin-container" style="overflow-y:auto; flex-grow:1;"></div>
-    <div style="padding-top:20px;">
-        <button class="btn btn-main" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
+    
+    <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;"></div>
+    
+    <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202, 167, 76, 0.2);">
+        <button class="btn" style="flex:1; border-color:var(--gold); color:var(--gold); background:transparent;" onclick="addCategory()">+ NEW SECTION</button>
+        <button class="btn btn-main" style="flex:2;" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
     </div>
 </div>
 
 <script>
+    // Security Check
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
+    
     let menuData = null;
 
     async function init() {
-        const res = await fetch('./menu.json');
+        const res = await fetch('./menu.json?v=' + Date.now());
         menuData = await res.json();
         render();
     }
@@ -31,35 +39,47 @@
     function render() {
         const container = document.getElementById('admin-container');
         container.innerHTML = menuData.categories.map((cat, cIdx) => `
-            <div style="margin-bottom:30px; border:1px solid var(--gold); padding:20px; border-radius:8px;">
-                <input class="admin-input" style="font-size:20px; font-weight:bold; margin-bottom:15px;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
+            <div style="margin-bottom:30px; border:1px solid var(--gold); padding:25px; border-radius:8px; background: rgba(202, 167, 76, 0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid rgba(202, 167, 76, 0.2); padding-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                        <i class="fa-solid ${cat.icon || 'fa-folder'}" style="color: var(--gold);"></i>
+                        <input class="admin-input" style="font-size:20px; font-weight:bold; font-family: 'Playfair Display';" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
+                    </div>
+                    <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="removeCategory(${cIdx})"></i>
+                </div>
                 <div id="items-${cIdx}">${cat.items.map((item, iIdx) => `
                     <div class="admin-item-box">
                         <div class="item-row">
-                            <i class="fa-solid fa-grip-vertical grip-handle"></i>
+                            <i class="fa-solid fa-grip-vertical" style="opacity:0.2;"></i>
                             <div class="inputs-container">
-                                <input class="admin-input" style="font-weight:bold;" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value">
-                                <input class="admin-input" style="font-size:12px; opacity:0.7;" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value">
+                                <input class="admin-input" style="font-weight:bold;" placeholder="Item Name" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value">
+                                <input class="admin-input" style="font-size:12px; opacity:0.7;" placeholder="Description" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value">
                             </div>
                             <div class="price-container">
-                                <span style="color:var(--gold); margin-right:5px;">$</span>
-                                <input type="number" class="admin-input" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value)">
+                                <span style="color:var(--gold); font-weight: bold; margin-right:5px;">$</span>
+                                <input type="number" class="admin-input" style="text-align: right;" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value)">
                             </div>
-                            <div class="delete-container">
-                                <i class="fa-solid fa-times" style="color:#ff4d4d; cursor:pointer;" onclick="removeItem(${cIdx}, ${iIdx})"></i>
-                            </div>
+                            <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer; width:20px; text-align:right; font-size: 18px;" onclick="removeItem(${cIdx}, ${iIdx})"></i>
                         </div>
                     </div>`).join('')}</div>
-                <button class="btn" style="font-size:12px; color:var(--green); border-color:var(--green); background:transparent;" onclick="addItem(${cIdx})">+ Add Dish</button>
+                <button class="btn" style="font-size:11px; color:var(--green); border-color:var(--green); background:transparent; margin-top:10px; border-style: dashed;" onclick="addItem(${cIdx})">+ ADD NEW DISH</button>
             </div>`).join('');
     }
 
-    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: 0, desc: "Description here"}); render(); }
+    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: 0, desc: "Item description...", icon: "fa-utensils"}); render(); }
+    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
+    function removeCategory(c) { if(confirm("Permanently delete this section?")) { menuData.categories.splice(c,1); render(); } }
     function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
+    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
+    
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu.json'; a.click();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'menu.json';
+        a.click();
     }
+    
     init();
 </script>
 </body>
