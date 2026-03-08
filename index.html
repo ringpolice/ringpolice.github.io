@@ -8,7 +8,7 @@
 </head>
 <body class="dark">
 
-<div id="loginModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(10px);">
+<div id="loginModal" class="modal-overlay">
     <div style="background:var(--card); border:2px solid var(--gold); padding:40px; border-radius:12px; width:350px; text-align:center;">
         <h2 style="color:var(--gold); margin-bottom:25px; font-family:'Playfair Display';">Chef Login</h2>
         <input type="text" id="user" placeholder="Username" onkeydown="if(event.key==='Enter')handleLogin()" style="width:100%; padding:12px; margin-bottom:10px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:white; border-radius:4px; outline:none;">
@@ -21,11 +21,13 @@
 
 <div class="container">
     <div class="header">
-        <div style="position:absolute; right:20px; top:20px; display:flex; gap:15px;">
-            <i class="fa-solid fa-moon" onclick="document.body.classList.toggle('dark')" style="cursor:pointer; color:var(--gold);"></i>
-            <i class="fa-solid fa-user-shield" onclick="openLogin()" style="cursor:pointer; color:var(--gold);"></i>
+        <div class="controls">
+            <i class="fa-solid fa-moon control-btn" onclick="document.body.classList.toggle('dark')"></i>
+            <i class="fa-solid fa-user-shield control-btn" onclick="openLogin()"></i>
         </div>
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <a href="index.html" class="logo-link">
+            <img class="logo" src="logo.png" alt="VindexCraft Logo">
+        </a>
         <div style="color:var(--gold); font-size:12px; letter-spacing:3px; text-transform:uppercase;">Official State Dining Menu</div>
     </div>
     <div id="menu-grid"></div>
