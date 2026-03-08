@@ -12,7 +12,7 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <div class="control-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+            <div class="control-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
             <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
         </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
@@ -21,28 +21,33 @@
 
     <div id="admin-container"></div>
 
-    <button class="btn btn-add" style="width:100%; font-size: 16px; padding: 15px; margin-top:20px;" onclick="addCategory()">
-        <i class="fa-solid fa-plus-circle"></i> Create New Menu Section
-    </button>
-
-    <div style="padding: 40px 0; border-top: 2px solid var(--gold); text-align: center; margin-top:40px;">
-        <button class="btn btn-main" onclick="downloadJSON()">
-            <i class="fa-solid fa-file-export"></i> SAVE & DOWNLOAD UPDATED MENU.JSON
-        </button>
+    <div style="flex-shrink:0;">
+        <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="addCategory()">+ New Section</button>
+        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
     </div>
 </div>
 
 <script>
-    if (sessionStorage.getItem('authenticated') !== 'true') {
-        window.location.href = 'index.html';
+    if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+
+    function toggleTheme() {
+        const isDark = document.body.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateThemeIcon(isDark);
+    }
+
+    function updateThemeIcon(isDark) {
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
 
     let menuData = null;
-
     async function init() {
         const response = await fetch('./menu.json');
         menuData = await response.json();
         render();
+        updateThemeIcon(document.body.classList.contains('dark'));
     }
 
     function render() {
@@ -52,24 +57,24 @@
             const section = document.createElement('div');
             section.className = 'admin-section-card';
             section.innerHTML = `
-                <div style="display:flex; justify-content: space-between; align-items: flex-end; margin-bottom: 25px;">
-                    <div style="flex:1"><input class="admin-input" style="font-size: 20px; font-weight: bold;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)"></div>
-                    <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-solid fa-trash"></i></button>
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <input class="admin-input" style="font-weight:bold; font-size:18px;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
+                    <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})">Add Dish</button>`;
+                <button class="btn btn-add" onclick="addItem(${cIdx})">+ Add Dish</button>`;
             
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
                 row.className = 'admin-item-box';
                 row.innerHTML = `
-                    <div style="display:flex; gap: 10px;">
+                    <div style="display:flex; gap:10px;">
                         <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
                         <input class="admin-input" style="flex:1" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:60px" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
+                    <textarea class="admin-input" style="height:40px; font-size:12px;" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
@@ -79,20 +84,18 @@
     function updateCat(c, v) { menuData.categories[c].title = v; }
     function updateItem(c, i, f, v) { menuData.categories[c].items[i][f] = v; }
     function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
-    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c, 1); render(); } }
-    function addItem(c) { menuData.categories[c].items.push({name: "New", price: "0", desc: ""}); render(); }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i, 1); render(); }
+    function removeCategory(c) { if(confirm("Delete?")) { menuData.categories.splice(c,1); render(); } }
+    function addItem(c) { menuData.categories[c].items.push({name: "New", price: "$0", desc: ""}); render(); }
+    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
 
     function downloadJSON() {
-        const data = JSON.stringify(menuData, null, 2);
-        const blob = new Blob([data], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'menu.json';
         a.click();
     }
     function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
-    function toggleTheme(){ document.body.classList.toggle("dark"); }
     init();
 </script>
 </body>

@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Dining Menu</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,19 +11,18 @@
 
 <div id="loginModal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="font-family: 'Playfair Display'; margin-bottom: 20px; color: var(--gold);">Management Access</h2>
+        <h2 style="font-family: 'Playfair Display'; margin-bottom: 20px; color: var(--gold);">Chef Login</h2>
         <input type="text" id="username" class="login-input" placeholder="Username">
         <input type="password" id="password" class="login-input" placeholder="Password">
-        <button class="login-btn" onclick="attemptLogin()">Log In</button>
-        <p id="loginError" style="color: #c0392b; font-size: 12px; margin-top: 10px; display: none;">Invalid Credentials</p>
-        <button style="margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;" onclick="closeLogin()">Cancel</button>
+        <button class="btn btn-main" onclick="attemptLogin()" style="font-size: 14px; padding: 10px;">Access Admin</button>
+        <button onclick="closeLogin()" style="margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer;">Cancel</button>
     </div>
 </div>
 
 <div class="container">
     <div class="controls">
         <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-        <div class="control-btn" onclick="showLogin()" title="Management"><i class="fa-solid fa-user-gear"></i></div>
+        <div class="control-btn" onclick="showLogin()"><i class="fa-solid fa-user-gear"></i></div>
     </div>
     <div class="header">
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
@@ -35,42 +33,48 @@
 </div>
 
 <script>
+    // Theme Persistence
+    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+
+    function toggleTheme() {
+        const isDark = document.body.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        updateThemeIcon(isDark);
+    }
+
+    function updateThemeIcon(isDark) {
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
     let cachedData = null;
     async function loadMenu() {
-        try {
-            const response = await fetch('./menu.json');
-            cachedData = await response.json();
-            const container = document.getElementById('menu-container');
-            cachedData.categories.forEach((cat) => {
-                const card = document.createElement('div');
-                card.className = 'menu-card';
-                let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
-                cat.items.forEach(item => {
-                    html += `<div class="menu-item"><div class="item-header"><span class="item-name">${item.name}</span><span class="item-leader"></span><span class="item-price">${item.price}</span></div>${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}</div>`;
-                });
-                card.innerHTML = html;
-                container.appendChild(card);
+        const response = await fetch('./menu.json');
+        cachedData = await response.json();
+        const container = document.getElementById('menu-container');
+        cachedData.categories.forEach(cat => {
+            const card = document.createElement('div');
+            card.className = 'menu-card';
+            let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
+            cat.items.forEach(item => {
+                html += `<div class="menu-item"><div class="item-header"><span class="item-name">${item.name}</span><span class="item-leader"></span><span class="item-price">${item.price}</span></div>${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}</div>`;
             });
-        } catch (e) { console.error(e); }
+            card.innerHTML = html;
+            container.appendChild(card);
+        });
+        updateThemeIcon(document.body.classList.contains('dark'));
     }
+
     function showLogin() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
     function attemptLogin() {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
-        const userFound = cachedData.users.find(user => user.username === u && user.password === p);
-        if (userFound) {
-            sessionStorage.setItem('authenticated', 'true');
-            window.location.href = 'admin.html';
-        } else {
-            document.getElementById('loginError').style.display = 'block';
-        }
+        const user = cachedData.users.find(user => user.username === u && user.password === p);
+        if (user) { sessionStorage.setItem('authenticated', 'true'); window.location.href = 'admin.html'; }
+        else { alert("Invalid login."); }
     }
-    function toggleTheme(){
-        document.body.classList.toggle("dark");
-        const icon = document.getElementById("themeIcon");
-        icon.classList.toggle("fa-moon"); icon.classList.toggle("fa-sun");
-    }
+
     loadMenu();
 </script>
 </body>
