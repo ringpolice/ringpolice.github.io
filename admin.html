@@ -3,76 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <title>Chef Console | State Dining</title>
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <div class="container">
     <div class="header">
-        <h1>Chef's Kitchen Console</h1>
-        <p style="color: var(--gold); margin-top: 10px;">Update Menu Items & Pricing</p>
+        <div class="controls">
+            <a href="index.html" class="control-btn" title="Back to Menu">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+        </div>
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png" alt="Logo">
+        <div class="subtitle">Chef's Kitchen Console</div>
     </div>
 
-    <div id="admin-editor">
-        </div>
+    <div class="admin-list" id="admin-container"></div>
 
     <div style="text-align: center;">
         <button class="btn-save" onclick="downloadJSON()">
-            <i class="fa-solid fa-file-export"></i> Export New menu.json
+            <i class="fa-solid fa-file-export"></i> Save & Export menu.json
         </button>
-        <br><br>
-        <a href="index.html" style="color: var(--text-muted); text-decoration: none; font-size: 14px;">← Exit to Public Menu</a>
     </div>
+
+    <div class="footer">ADMINISTRATIVE ACCESS • VINDEXCRAFT</div>
 </div>
 
 <script>
     let menuData = null;
 
     async function initAdmin() {
-        try {
-            const response = await fetch('menu.json');
-            menuData = await response.json();
-            renderEditor();
-        } catch (e) {
-            alert("Error: Could not load menu.json. Make sure you're using a local server.");
-        }
-    }
-
-    function renderEditor() {
-        const container = document.getElementById('admin-editor');
-        let html = '';
+        const response = await fetch('menu.json');
+        menuData = await response.json();
+        const container = document.getElementById('admin-container');
 
         menuData.categories.forEach((cat, catIdx) => {
-            html += `<h3 style="margin: 20px 0 10px; color:var(--navy);">${cat.title}</h3>
-            <table class="admin-table">
-                <tr style="background:rgba(0,0,0,0.05)"><th>Item Name</th><th>Price</th><th>Description</th></tr>`;
-            
+            const section = document.createElement('div');
+            section.className = 'category-section';
+            let html = `<div class="category-title">${cat.title}</div>`;
+
             cat.items.forEach((item, itemIdx) => {
                 html += `
-                <tr>
-                    <td><input class="admin-input" value="${item.name}" onchange="updateItem(${catIdx}, ${itemIdx}, 'name', this.value)"></td>
-                    <td><input class="admin-input" value="${item.price}" onchange="updateItem(${catIdx}, ${itemIdx}, 'price', this.value)"></td>
-                    <td><input class="admin-input" value="${item.desc || ''}" onchange="updateItem(${catIdx}, ${itemIdx}, 'desc', this.value)"></td>
-                </tr>`;
+                <div class="menu-item">
+                    <div class="admin-item-row">
+                        <input class="admin-input" value="${item.name}" onchange="updateItem(${catIdx}, ${itemIdx}, 'name', this.value)" placeholder="Item Name">
+                        <input class="admin-input" value="${item.price}" onchange="updateItem(${catIdx}, ${itemIdx}, 'price', this.value)" placeholder="Price">
+                    </div>
+                    <input class="admin-input admin-desc-input" value="${item.desc || ''}" onchange="updateItem(${catIdx}, ${itemIdx}, 'desc', this.value)" placeholder="Description (optional)">
+                </div>`;
             });
-            html += `</table>`;
+            section.innerHTML = html;
+            container.appendChild(section);
         });
-        container.innerHTML = html;
     }
 
-    function updateItem(catIdx, itemIdx, field, value) {
-        menuData.categories[catIdx].items[itemIdx][field] = value;
-    }
+    function updateItem(cIdx, iIdx, field, val) { menuData.categories[cIdx].items[iIdx][field] = val; }
 
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: "application/json"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = "menu.json";
-        a.click();
-        URL.revokeObjectURL(url);
-        alert("Success! Now replace the 'menu.json' in your project folder with this new file.");
+        a.href = url; a.download = "menu.json"; a.click();
+        alert("Success! Replace your current menu.json with this new file.");
     }
 
     initAdmin();
