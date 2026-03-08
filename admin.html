@@ -15,6 +15,14 @@
     <span id="statusText">Syncing...</span>
 </div>
 
+<div id="iconModal" class="modal-overlay">
+    <div class="modal-content" style="width: 400px;">
+        <h3 style="margin-bottom:20px; font-family:'Playfair Display'; color:var(--gold);">Select Section Icon</h3>
+        <div class="icon-grid" id="icon-picker-list"></div>
+        <button class="btn btn-main" style="margin-top:20px;" onclick="closeIconPicker()">Close</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="header">
         <div class="controls">
@@ -41,6 +49,15 @@
     let saveTimeout;
     let draggedItemInfo = null;
     let draggedSectionIdx = null;
+    let activeIconCategory = null;
+
+    const iconList = [
+        'fa-utensils', 'fa-bread-slice', 'fa-plate-wheat', 'fa-bowl-food', 'fa-burger', 
+        'fa-pizza-slice', 'fa-hotdog', 'fa-egg', 'fa-cheese', 'fa-bacon', 
+        'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-cookie', 'fa-cake-candles', 
+        'fa-apple-whole', 'fa-carrot', 'fa-leaf', 'fa-wine-glass', 'fa-mug-hot', 
+        'fa-glass-water', 'fa-beer-mug-empty', 'fa-cocktail', 'fa-bottle-water'
+    ];
 
     async function init() {
         const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
@@ -68,7 +85,6 @@
             section.className = 'admin-section-card';
             section.draggable = true;
 
-            // Section Drag Events
             section.ondragstart = (e) => {
                 if (e.target.className.includes('admin-section-card')) {
                     draggedSectionIdx = cIdx;
@@ -85,9 +101,10 @@
 
             section.innerHTML = `
                 <div class="section-drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding: 0 5px;">
+                <div style="display:flex; align-items:center; margin-bottom:15px; padding: 0 5px;">
+                    <i class="fa-solid ${cat.icon || 'fa-utensils'} admin-icon-display" onclick="openIconPicker(${cIdx})"></i>
                     <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value, this)">
-                    <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
+                    <button class="btn btn-del" style="margin-left:10px;" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
                 <button class="btn btn-add" style="font-size:12px;" onclick="addItem(${cIdx})">+ Add Dish</button>`;
@@ -117,6 +134,28 @@
         });
     }
 
+    function openIconPicker(cIdx) {
+        activeIconCategory = cIdx;
+        const pickerList = document.getElementById('icon-picker-list');
+        pickerList.innerHTML = '';
+        iconList.forEach(icon => {
+            const el = document.createElement('i');
+            el.className = `fa-solid ${icon} icon-option`;
+            el.onclick = () => selectIcon(icon);
+            pickerList.appendChild(el);
+        });
+        document.getElementById('iconModal').style.display = 'flex';
+    }
+
+    function selectIcon(iconName) {
+        menuData.categories[activeIconCategory].icon = iconName;
+        closeIconPicker();
+        render();
+        showStatus('saved');
+    }
+
+    function closeIconPicker() { document.getElementById('iconModal').style.display = 'none'; }
+
     function handleSectionDrop(src, dest) {
         if (src === dest) return;
         const [moved] = menuData.categories.splice(src, 1);
@@ -145,7 +184,10 @@
         clearTimeout(saveTimeout); saveTimeout = setTimeout(() => showStatus('saved'), 800);
     }
 
-    function updateCat(c, v, el) { menuData.categories[c].title = v; if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); } }
+    function updateCat(c, v, el) { 
+        menuData.categories[c].title = v; 
+        if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); }
+    }
 
     function showStatus(type) {
         const el = document.getElementById('saveStatus');
@@ -166,7 +208,7 @@
     }
 
     function addCategory() { 
-        menuData.categories.push({title: "New Section", items: []}); 
+        menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); 
         render(); 
         setTimeout(() => {
             const container = document.getElementById('admin-container');
