@@ -11,19 +11,19 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <i class="fa-solid fa-moon control-btn" onclick="toggleTheme()"></i>
+            <i class="fa-solid fa-moon control-btn" onclick="document.body.classList.toggle('dark')"></i>
             <i class="fa-solid fa-right-from-bracket control-btn" onclick="logout()"></i>
         </div>
-        <img class="logo" src="logo.png" alt="VindexCraft Logo">
-        <div style="color:var(--gold); font-size:12px; text-transform:uppercase; letter-spacing: 2px;">Kitchen Administration Console</div>
+        <img class="logo" src="logo.png" alt="VindexCraft">
+        <div style="color:var(--gold); font-family:'Montserrat'; font-size:10px; text-transform:uppercase; letter-spacing: 3px; font-weight:800;">Kitchen Administration Console</div>
     </div>
     
     <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;">
         </div>
     
-    <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202, 167, 76, 0.2);">
-        <button class="btn" style="flex:1;" onclick="addCategory()">+ NEW SECTION</button>
-        <button id="saveBtn" class="btn" style="flex:2;" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
+    <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202,167,76,0.2);">
+        <button class="btn" style="flex:1;" onclick="addCategory()">+ New Section</button>
+        <button id="saveBtn" class="btn" style="flex:2;" onclick="downloadJSON()">Save & Download Menu.json</button>
     </div>
 </div>
 
@@ -46,81 +46,54 @@
             const section = document.createElement('div');
             section.className = 'admin-section';
             section.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid rgba(202,167,76,0.1); padding-bottom: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                        <i class="fa-solid fa-grip section-handle" style="cursor:grab; color:var(--gold); opacity:0.4;"></i>
-                        <input class="admin-input" style="font-size:20px; font-weight:bold;" value="${cat.title}" onchange="markUnsaved()">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <i class="fa-solid fa-grip section-handle" style="cursor:grab; opacity:0.3; color:var(--gold);"></i>
+                        <input class="admin-input" style="font-family:'Montserrat'; font-weight:700; font-size:1.1rem; text-transform:uppercase;" value="${cat.title}" onchange="markUnsaved()">
                     </div>
-                    <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="this.closest('.admin-section').remove(); markUnsaved();"></i>
+                    <i class="fa-solid fa-trash-can" style="color:#ef4444; cursor:pointer;" onclick="this.closest('.admin-section').remove(); markUnsaved();"></i>
                 </div>
                 <div class="items-list">
                     ${cat.items.map(item => createItemHTML(item)).join('')}
                 </div>
-                <button class="btn" style="font-size:11px; margin-top:10px; padding: 8px 15px;" onclick="addItem(this)">+ ADD DISH</button>
+                <button class="btn" style="font-size:0.7rem; margin-top:15px; padding:8px 16px;" onclick="addItem(this)">+ Add Dish</button>
             `;
             container.appendChild(section);
-            new Sortable(section.querySelector('.items-list'), { group: 'shared', handle: '.grip-handle', animation: 150, onEnd: () => markUnsaved() });
+            new Sortable(section.querySelector('.items-list'), { group: 'shared', handle: '.grip-handle', animation: 150, onEnd: markUnsaved });
         });
-        new Sortable(container, { handle: '.section-handle', animation: 200, onEnd: () => markUnsaved() });
+        new Sortable(container, { handle: '.section-handle', animation: 200, onEnd: markUnsaved });
     }
 
     function createItemHTML(item) {
-        return `<div class="admin-item-box">
-                <div style="display:flex; align-items:center; gap:15px; width:100%;">
-                    <i class="fa-solid fa-grip-vertical grip-handle"></i>
-                    <div style="flex-grow:1; display:flex; flex-direction:column; gap:4px;">
-                        <input class="admin-input" style="font-weight:bold;" value="${item.name || 'New Dish'}" onchange="markUnsaved()">
-                        <input class="admin-input" style="font-size:12px; opacity:0.7;" value="${item.desc || 'Description'}" onchange="markUnsaved()">
-                    </div>
-                    <div class="price-editor">
-                        <span style="color:var(--gold); font-size:12px; margin-right:5px; font-weight:bold;">$</span>
-                        <input type="number" class="price-input" value="${item.price || 0}" onchange="markUnsaved()">
-                    </div>
-                    <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer;" onclick="this.closest('.admin-item-box').remove(); markUnsaved();"></i>
+        return `
+            <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px; padding:15px; background:rgba(255,255,255,0.02); border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+                <i class="fa-solid fa-grip-vertical grip-handle" style="cursor:grab; opacity:0.2;"></i>
+                <div style="flex-grow:1;">
+                    <input class="admin-input" style="font-weight:600;" value="${item.name || 'New Item'}" onchange="markUnsaved()">
+                    <input class="admin-input" style="font-size:0.85rem; opacity:0.6;" value="${item.desc || 'Description'}" onchange="markUnsaved()">
                 </div>
+                <div class="price-editor">
+                    <span style="color:var(--gold); font-size:0.8rem; margin-right:5px; font-weight:800;">$</span>
+                    <input type="number" class="price-input" value="${item.price || 0}" onchange="markUnsaved()">
+                </div>
+                <i class="fa-solid fa-xmark" style="color:#ef4444; cursor:pointer; font-size:1.1rem;" onclick="this.parentElement.remove(); markUnsaved();"></i>
             </div>`;
     }
 
     function markUnsaved() { document.getElementById('saveBtn').classList.add('unsaved'); }
     function clearUnsaved() { document.getElementById('saveBtn').classList.remove('unsaved'); }
-
-    function addItem(btn) { 
-        const list = btn.previousElementSibling;
-        const temp = document.createElement('div');
-        temp.innerHTML = createItemHTML({});
-        list.appendChild(temp.firstElementChild);
-        markUnsaved();
-    }
-
-    function addCategory() { 
-        const container = document.getElementById('admin-container');
-        const section = document.createElement('div');
-        section.className = 'admin-section';
-        section.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 1px solid rgba(202,167,76,0.1); padding-bottom: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
-                    <i class="fa-solid fa-grip section-handle" style="cursor:grab; color:var(--gold); opacity:0.4;"></i>
-                    <input class="admin-input" style="font-size:20px; font-weight:bold;" value="New Section" onchange="markUnsaved()">
-                </div>
-                <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="this.closest('.admin-section').remove(); markUnsaved();"></i>
-            </div>
-            <div class="items-list"></div>
-            <button class="btn" style="font-size:11px; margin-top:10px; padding: 8px 15px;" onclick="addItem(this)">+ ADD DISH</button>`;
-        container.appendChild(section);
-        new Sortable(section.querySelector('.items-list'), { group: 'shared', handle: '.grip-handle', animation: 150, onEnd: () => markUnsaved() });
-        markUnsaved();
-    }
+    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
 
     function syncData() {
         const categories = [];
         document.querySelectorAll('.admin-section').forEach(sec => {
             const items = [];
-            sec.querySelectorAll('.admin-item-box').forEach(itemBox => {
-                const inputs = itemBox.querySelectorAll('.admin-input');
-                items.push({ 
-                    name: inputs[0].value, 
-                    desc: inputs[1].value, 
-                    price: parseInt(itemBox.querySelector('.price-input').value) || 0,
+            sec.querySelectorAll('.admin-input[style*="font-weight:600"]').forEach((input) => {
+                const parent = input.closest('div').parentElement;
+                items.push({
+                    name: input.value,
+                    desc: parent.querySelectorAll('.admin-input')[1].value,
+                    price: parseInt(parent.querySelector('.price-input').value) || 0,
                     icon: "fa-utensils"
                 });
             });
@@ -139,8 +112,6 @@
         clearUnsaved();
     }
 
-    function toggleTheme() { document.body.classList.toggle('dark'); }
-    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
     window.onload = init;
 </script>
 </body>
