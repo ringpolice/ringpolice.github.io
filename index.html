@@ -19,8 +19,7 @@
             <div style="color:var(--gold); font-family:'Montserrat'; font-size:10px; letter-spacing: 4px; font-weight:800; text-transform:uppercase;">Established 2024</div>
         </header>
 
-        <div id="public-menu" class="menu-grid">
-            </div>
+        <div id="public-menu" class="menu-grid"></div>
     </div>
 
     <script>
@@ -32,31 +31,22 @@
                 
                 data.categories.forEach(cat => {
                     const catDiv = document.createElement('div');
-                    catDiv.className = 'menu-category';
-                    
                     let itemsHtml = '';
                     cat.items.forEach(item => {
                         itemsHtml += `
                             <div class="menu-item" style="margin-bottom:25px;">
                                 <div class="item-main">
-                                    <span style="font-family:'Montserrat'; font-weight:700; letter-spacing:0.5px;">${item.name}</span>
+                                    <span style="font-family:'Montserrat'; font-weight:700;">${item.name}</span>
                                     <div class="item-dots"></div>
-                                    <span style="color:var(--gold); font-family:'Inter'; font-weight:700;">$${item.price}</span>
+                                    <span style="color:var(--gold); font-weight:700;">$${item.price}</span>
                                 </div>
-                                <div class="item-desc" style="font-family:'Inter'; font-size:0.85rem; color:var(--text-muted); margin-top:5px; line-height:1.5;">${item.desc}</div>
+                                <div class="item-desc" style="font-size:0.85rem; color:var(--text-muted); margin-top:5px;">${item.desc}</div>
                             </div>`;
                     });
-
-                    catDiv.innerHTML = `
-                        <h2 style="font-family:var(--font-heading); color:var(--gold); margin-bottom:20px; text-transform:uppercase; font-size:1.1rem; border-bottom: 1px solid var(--border); padding-bottom:10px; letter-spacing:2px;">
-                            ${cat.title}
-                        </h2>` + itemsHtml;
-                    
+                    catDiv.innerHTML = `<h2 style="font-family:var(--font-heading); color:var(--gold); margin-bottom:20px; text-transform:uppercase; font-size:1.1rem; border-bottom: 1px solid var(--border); padding-bottom:10px; letter-spacing:2px;">${cat.title}</h2>` + itemsHtml;
                     container.appendChild(catDiv);
                 });
-            } catch (e) {
-                console.error("Could not load menu.json", e);
-            }
+            } catch (e) { console.error(e); }
         }
         window.onload = loadMenu;
     </script>
