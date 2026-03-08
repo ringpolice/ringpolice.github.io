@@ -26,7 +26,7 @@ body {
 
 .header { text-align: center; position: relative; margin-bottom: 70px; }
 
-/* Flush Controls */
+/* Control Buttons */
 .controls {
     position: absolute; right: -20px; top: -20px;
     display: flex; background: var(--card);
@@ -35,10 +35,11 @@ body {
 }
 
 .control-btn {
-    cursor: pointer; font-size: 16px; color: var(--gold);
+    cursor: pointer; font-size: 14px; color: var(--gold);
     padding: 12px 18px; transition: .25s;
     text-decoration: none; border-left: 1px solid rgba(202, 167, 76, 0.3);
     display: flex; align-items: center; gap: 8px;
+    font-family: "Playfair Display", serif;
 }
 .control-btn:first-child { border-left: none; }
 .control-btn:hover { background: var(--gold); color: white; }
@@ -46,42 +47,60 @@ body {
 .logo { width: 220px; max-width: 85%; margin-bottom: 15px; }
 .subtitle { font-family: "Playfair Display", serif; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); }
 
-/* Category & Item Layout */
-.admin-list { display: flex; flex-direction: column; gap: 60px; }
-.category-section { position: relative; border-bottom: 1px double var(--gold); padding-bottom: 40px; }
-.category-title-container { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 30px; }
+/* Admin Grid & Cards */
+.admin-list { display: flex; flex-direction: column; gap: 80px; }
+.category-section { position: relative; }
 
-.admin-item-card {
-    background: rgba(0,0,0,0.02);
-    border: 1px solid rgba(202, 167, 76, 0.15);
-    padding: 20px; border-radius: 6px; margin-bottom: 20px;
-    position: relative;
+/* Input Styling - The "Stationery" Look */
+.input-group { margin-bottom: 20px; position: relative; }
+.input-label { 
+    display: block; font-family: "Playfair Display", serif; 
+    font-size: 12px; color: var(--gold); 
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 5px; font-weight: bold;
 }
-body.dark .admin-item-card { background: rgba(255,255,255,0.03); }
 
-/* Inputs */
 .admin-input {
-    background: var(--card); border: 1px solid rgba(202, 167, 76, 0.4);
-    padding: 12px; color: inherit; font-family: inherit; border-radius: 4px; width: 100%;
+    background: transparent; border: none;
+    border-bottom: 1px solid rgba(202, 167, 76, 0.4);
+    padding: 10px 5px; color: var(--text); font-family: inherit; width: 100%;
+    transition: 0.3s;
 }
-.admin-input:focus { border-color: var(--navy); outline: none; box-shadow: 0 0 5px rgba(22, 35, 59, 0.2); }
 
-.row { display: flex; gap: 15px; margin-bottom: 10px; }
-.flex-3 { flex: 3; } .flex-1 { flex: 1; }
+.admin-input:focus {
+    border-bottom: 2px solid var(--gold);
+    background: rgba(202, 167, 76, 0.05);
+    outline: none;
+}
 
-textarea.admin-input { height: 80px; resize: vertical; }
+textarea.admin-input { 
+    border: 1px solid rgba(202, 167, 76, 0.2); 
+    border-radius: 4px; height: 100px; padding: 10px;
+}
+
+/* Category Title Input */
+.cat-title-input {
+    font-family: "Playfair Display", serif; font-size: 28px;
+    text-align: center; color: var(--navy); border-bottom: 2px solid var(--gold);
+    margin-bottom: 30px;
+}
+body.dark .cat-title-input { color: #fff; }
 
 /* Buttons */
 .btn { 
-    padding: 10px 18px; border: none; border-radius: 4px; 
-    cursor: pointer; font-family: "Playfair Display", serif; font-weight: bold;
-    transition: 0.3s; font-size: 14px;
+    padding: 10px 20px; border-radius: 4px; border: 1px solid transparent;
+    cursor: pointer; font-family: "Playfair Display", serif;
+    transition: 0.3s; font-size: 13px;
 }
-.btn-add { background: var(--green); color: white; margin-top: 10px; }
-.btn-remove { background: #c0392b; color: white; padding: 5px 10px; font-size: 12px; }
-.btn-category { background: var(--navy); color: var(--gold); border: 1px solid var(--gold); width: 100%; margin-top: 20px; }
+.btn-add { color: var(--green); border-color: var(--green); background: transparent; margin-bottom: 30px; }
+.btn-add:hover { background: var(--green); color: white; }
 
-.save-zone { text-align: center; margin-top: 50px; padding-top: 30px; border-top: 2px solid var(--gold); }
-.btn-export { background: var(--gold); color: white; font-size: 18px; padding: 15px 40px; }
+.btn-remove { color: #c0392b; background: transparent; border: none; font-size: 18px; opacity: 0.6; }
+.btn-remove:hover { opacity: 1; transform: scale(1.1); }
+
+.btn-category { background: var(--navy); color: var(--gold); border: 1px solid var(--gold); width: 100%; font-size: 16px; padding: 15px; }
+
+.save-zone { text-align: center; margin-top: 80px; padding-top: 40px; border-top: 2px solid var(--gold); }
+.btn-export { background: var(--gold); color: white; font-size: 20px; padding: 18px 50px; border: none; font-weight: bold; cursor: pointer; }
 
 .footer { text-align: center; margin-top: 60px; padding-top: 30px; border-top: 1px double var(--gold); font-size: 12px; opacity: .7; }

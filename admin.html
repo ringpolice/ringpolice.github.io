@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chef Console | Admin</title>
+    <title>Chef Console | State Dining Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -21,18 +21,20 @@
 
     <div id="admin-container" class="admin-list"></div>
 
-    <button class="btn btn-category" onclick="addCategory()">
-        <i class="fa-solid fa-folder-plus"></i> Add New Section (e.g. Specials)
-    </button>
-
-    <div class="save-zone">
-        <button class="btn btn-export" onclick="downloadJSON()">
-            <i class="fa-solid fa-file-export"></i> SAVE & EXPORT MENU.JSON
+    <div style="margin-top: 40px; text-align: center;">
+        <button class="btn btn-category" onclick="addCategory()">
+            <i class="fa-solid fa-plus-circle"></i> Add New Menu Section
         </button>
-        <p style="font-size: 12px; margin-top: 10px; opacity: 0.8;">Download and replace your existing menu.json file.</p>
     </div>
 
-    <div class="footer">ADMINISTRATIVE ACCESS ONLY • VINDEXCRAFT</div>
+    <div class="save-zone">
+        <button class="btn-export" onclick="downloadJSON()">
+            <i class="fa-solid fa-file-signature"></i> Finalize & Export Menu
+        </button>
+        <p style="font-size: 13px; margin-top: 15px; font-style: italic;">Replacement of menu.json is required after export.</p>
+    </div>
+
+    <div class="footer">VINDEXCRAFT OFFICIAL STATE DINING • EST. 2024</div>
 </div>
 
 <script>
@@ -43,7 +45,7 @@
             const response = await fetch('menu.json');
             menuData = await response.json();
             render();
-        } catch (e) { console.log("Starting with empty menu."); render(); }
+        } catch (e) { console.log("Initializing new menu."); render(); }
     }
 
     function render() {
@@ -55,49 +57,68 @@
             section.className = 'category-section';
             
             section.innerHTML = `
-                <div class="category-title-container">
-                    <input class="admin-input flex-3" style="font-weight:bold; text-align:center;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
-                    <button class="btn btn-remove" onclick="removeCat(${cIdx})"><i class="fa-solid fa-trash"></i></button>
+                <div style="display:flex; align-items:center; gap:15px; justify-content:center; margin-bottom:40px;">
+                    <input class="admin-input cat-title-input" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)" placeholder="Category Title">
+                    <button class="btn-remove" onclick="removeCat(${cIdx})" title="Delete Section"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add Item to ${cat.title}</button>
+                <div style="text-align:center;">
+                    <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add New Dish to ${cat.title}</button>
+                </div>
             `;
 
             const itemContainer = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
-                const itemCard = document.createElement('div');
-                itemCard.className = 'admin-item-card';
-                itemCard.innerHTML = `
-                    <div class="row">
-                        <input class="admin-input flex-3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)" placeholder="Item Name">
-                        <input class="admin-input flex-1" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)" placeholder="Price">
-                        <button class="btn btn-remove" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
+                const itemDiv = document.createElement('div');
+                itemDiv.style.marginBottom = "50px";
+                itemDiv.innerHTML = `
+                    <div style="display:flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
+                        <div style="flex:1;">
+                            <div style="display:flex; gap:20px; margin-bottom:15px;">
+                                <div style="flex:3;">
+                                    <label class="input-label">Dish Name</label>
+                                    <input class="admin-input" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
+                                </div>
+                                <div style="flex:1;">
+                                    <label class="input-label">Price</label>
+                                    <input class="admin-input" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">Description & Ingredients</label>
+                                <textarea class="admin-input" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc || ''}</textarea>
+                            </div>
+                        </div>
+                        <button class="btn-remove" style="margin-top:30px;" onclick="removeItem(${cIdx}, ${iIdx})"><i class="fa-solid fa-circle-xmark"></i></button>
                     </div>
-                    <textarea class="admin-input" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)" placeholder="Item Description">${item.desc || ''}</textarea>
                 `;
-                itemContainer.appendChild(itemCard);
+                itemContainer.appendChild(itemDiv);
             });
             container.appendChild(section);
         });
     }
 
-    // Logic Functions
+    // Handlers
     function updateCat(cIdx, val) { menuData.categories[cIdx].title = val; }
     function updateItem(cIdx, iIdx, field, val) { menuData.categories[cIdx].items[iIdx][field] = val; }
     
     function addCategory() {
-        menuData.categories.push({ title: "New Section", icon: "fa-utensils", items: [] });
+        menuData.categories.push({ title: "New Section", icon: "fa-utensils", items: [{ name: "", price: "", desc: "" }] });
         render();
     }
     function removeCat(cIdx) {
-        if(confirm("Delete this entire section?")) { menuData.categories.splice(cIdx, 1); render(); }
+        if(confirm("Permanently remove this entire menu section?")) {
+            menuData.categories.splice(cIdx, 1);
+            render();
+        }
     }
     function addItem(cIdx) {
         menuData.categories[cIdx].items.push({ name: "", price: "", desc: "" });
         render();
     }
     function removeItem(cIdx, iIdx) {
-        menuData.categories[cIdx].items.splice(iIdx, 1); render();
+        menuData.categories[cIdx].items.splice(iIdx, 1);
+        render();
     }
 
     function toggleTheme(){
