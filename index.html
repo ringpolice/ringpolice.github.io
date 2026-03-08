@@ -15,7 +15,7 @@
         <input type="text" id="username" class="login-input" placeholder="Username">
         <input type="password" id="password" class="login-input" placeholder="Password">
         <button class="btn btn-main" onclick="attemptLogin()" style="font-size: 14px; padding: 12px;">Login to Console</button>
-        <button onclick="closeLogin()" style="margin-top:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size: 13px;">Return to Menu</button>
+        <button onclick="closeLogin()" style="margin-top:20px; background:none; border:none; color:var(--text-muted); cursor:pointer;">Return to Menu</button>
     </div>
 </div>
 
@@ -33,7 +33,6 @@
 </div>
 
 <script>
-    // Theme Persistence
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 
     function toggleTheme() {
@@ -57,7 +56,6 @@
             card.className = 'menu-card';
             let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
             cat.items.forEach(item => {
-                // Formatting Integer Price to String for guests
                 const displayPrice = item.price !== undefined ? `$${item.price}` : '';
                 html += `<div class="menu-item"><div class="item-header"><span class="item-name">${item.name}</span><span class="item-leader"></span><span class="item-price">${displayPrice}</span></div>${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}</div>`;
             });

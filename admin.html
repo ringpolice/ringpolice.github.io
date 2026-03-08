@@ -9,6 +9,11 @@
 </head>
 <body>
 
+<div id="saveStatus">
+    <i id="statusIcon" class="fa-solid fa-circle-notch spinner"></i>
+    <span id="statusText">Syncing...</span>
+</div>
+
 <div class="container">
     <div class="header">
         <div class="controls">
@@ -43,6 +48,8 @@
     }
 
     let menuData = null;
+    let saveTimeout;
+
     async function init() {
         const response = await fetch('./menu.json');
         menuData = await response.json();
@@ -58,7 +65,7 @@
             section.className = 'admin-section-card';
             section.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <input class="admin-input" style="font-weight:bold; font-size:20px; flex: 1; margin-right: 15px;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
+                    <input class="admin-input" style="font-weight:bold; font-size:20px; flex: 1; margin-right: 15px;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value, this)">
                     <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
@@ -70,31 +77,71 @@
                 row.className = 'admin-item-box';
                 row.innerHTML = `
                     <div style="display:flex; gap:10px; align-items:center;">
-                        <input class="admin-input" style="flex:3" placeholder="Dish Name" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
+                        <input class="admin-input" style="flex:3" placeholder="Dish Name" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value, this)">
                         
                         <div style="position:relative; flex:1; display:flex; align-items:center;">
                             <span style="position:absolute; left:8px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="number" class="admin-input" style="padding-left:22px;" placeholder="Price" value="${item.price}" 
-                                   onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)"
-                                   onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                            <input type="text" class="admin-input price-input" style="padding-left:22px;" placeholder="0" value="${item.price}" 
+                                   onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)"
+                                   onkeydown="validateNumber(event)">
                         </div>
 
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:50px; font-size:13px; margin-top: 5px;" placeholder="Description..." onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
+                    <textarea class="admin-input" style="height:50px; font-size:13px; margin-top: 5px;" placeholder="Description..." onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value, this)">${item.desc}</textarea>`;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
         });
     }
 
-    function updateCat(c, v) { menuData.categories[c].title = v; }
+    function validateNumber(e) {
+        // Allow: backspace, delete, tab, escape, enter
+        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 || (e.keyCode >= 35 && e.keyCode <= 40)) return;
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    }
+
+    function showStatus(type) {
+        const el = document.getElementById('saveStatus');
+        const icon = document.getElementById('statusIcon');
+        const text = document.getElementById('statusText');
+        el.classList.add('show');
+        if (type === 'sync') {
+            icon.className = "fa-solid fa-circle-notch spinner";
+            icon.style.color = "var(--gold)";
+            text.innerText = "Syncing...";
+        } else {
+            icon.className = "fa-solid fa-circle-check";
+            icon.style.color = "var(--green)";
+            text.innerText = "Data Updated";
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+    }
+
+    function updateCat(c, v, el) { 
+        menuData.categories[c].title = v; 
+        flashEffect(el);
+    }
     
-    function updateItem(c, i, f, v) { 
+    function updateItem(c, i, f, v, el) { 
+        showStatus('sync');
         if (f === 'price') {
             menuData.categories[c].items[i][f] = parseInt(v) || 0;
         } else {
             menuData.categories[c].items[i][f] = v; 
+        }
+        flashEffect(el);
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => showStatus('saved'), 800);
+    }
+
+    function flashEffect(el) {
+        if(el) {
+            el.classList.add('input-saved');
+            setTimeout(() => el.classList.remove('input-saved'), 500);
         }
     }
 
