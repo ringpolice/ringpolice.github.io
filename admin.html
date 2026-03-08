@@ -10,11 +10,6 @@
 </head>
 <body>
 
-<div id="saveStatus">
-    <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
-    <span style="margin-left:8px;">Changes Staged</span>
-</div>
-
 <div class="container">
     <div class="header">
         <div class="controls">
@@ -22,12 +17,12 @@
             <div class="control-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i></div>
         </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
-        <div class="subtitle">Kitchen Administration Console</div>
+        <div class="subtitle" style="color:var(--gold); font-size:12px; letter-spacing:2px; text-transform:uppercase;">Kitchen Administration</div>
     </div>
 
     <div id="admin-container"></div>
 
-    <div style="margin-top: 30px;">
+    <div style="margin-top: 20px;">
         <button class="btn btn-add" style="width:100%; border-style: dashed;" onclick="addCategory()">+ Create New Menu Section</button>
         <button class="btn btn-main" onclick="downloadJSON()">DOWNLOAD MENU.JSON</button>
     </div>
@@ -37,8 +32,6 @@
     if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
     
     let menuData = null;
-    let draggedItemInfo = null; 
-    let draggedSectionIdx = null;
 
     async function init() {
         const response = await fetch(`./menu.json?v=${Date.now()}`);
@@ -53,54 +46,31 @@
         menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'admin-section-card';
-            section.draggable = true;
-            section.ondragstart = (e) => { if (e.target.className === 'section-drag-handle') draggedSectionIdx = cIdx; else e.preventDefault(); };
-            section.ondragover = (e) => e.preventDefault();
-            section.ondrop = (e) => {
-                if (draggedSectionIdx !== null) {
-                    const [moved] = menuData.categories.splice(draggedSectionIdx, 1);
-                    menuData.categories.splice(cIdx, 0, moved);
-                    draggedSectionIdx = null; render(); showStatus();
-                }
-            };
-
+            
             section.innerHTML = `
-                <div class="section-drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
-                <div style="display:flex; align-items:center; margin-bottom:20px; gap:15px;">
-                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value; showStatus();">
-                    <button class="btn" style="color:#c0392b; background:rgba(192,57,43,0.1);" onclick="removeCategory(${cIdx})"><i class="fa-trash"></i></button>
+                <div class="section-drag-handle"></div>
+                <div style="display:flex; align-items:center; margin-bottom:15px; gap:10px;">
+                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="menuData.categories[${cIdx}].title = this.value">
+                    <button class="btn" style="color:#c0392b;" onclick="removeCategory(${cIdx})"><i class="fa-trash"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})">+ Add Dish</button>
+                <button class="btn btn-add" style="font-size:11px;" onclick="addItem(${cIdx})">+ Add Item</button>
             `;
 
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
                 const row = document.createElement('div');
                 row.className = 'admin-item-box';
-                row.draggable = true;
-                row.ondragstart = (e) => { e.stopPropagation(); draggedItemInfo = { cIdx, iIdx }; };
-                row.ondragover = (e) => e.preventDefault();
-                row.ondrop = (e) => {
-                    e.stopPropagation();
-                    if (draggedItemInfo) {
-                        const { cIdx: sC, iIdx: sI } = draggedItemInfo;
-                        const [moved] = menuData.categories[sC].items.splice(sI, 1);
-                        menuData.categories[cIdx].items.splice(iIdx, 0, moved);
-                        draggedItemInfo = null; render(); showStatus();
-                    }
-                };
-
                 row.innerHTML = `
                     <div class="item-row">
-                        <i class="fa-solid fa-grip-vertical" style="color:var(--gold); opacity:0.3; cursor:grab;"></i>
-                        <input class="admin-input" placeholder="Item Name" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value; showStatus();">
-                        <input class="admin-input" placeholder="Description" style="font-size:12px; opacity:0.8;" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value; showStatus();">
-                        <div style="position:relative;">
-                            <span style="position:absolute; left:0; top:8px; font-size:12px; color:var(--gold);">$</span>
-                            <input type="number" class="admin-input" style="padding-left:12px;" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value); showStatus();">
+                        <i class="fa-solid fa-grip-vertical" style="color:var(--gold); opacity:0.3;"></i>
+                        <input class="admin-input input-name" placeholder="Name" value="${item.name}" onchange="menuData.categories[${cIdx}].items[${iIdx}].name = this.value">
+                        <input class="admin-input input-desc" placeholder="Description" value="${item.desc}" onchange="menuData.categories[${cIdx}].items[${iIdx}].desc = this.value">
+                        <div style="display:flex; align-items:center;">
+                            <span style="color:var(--gold);">$</span>
+                            <input type="number" class="admin-input input-price" value="${item.price}" onchange="menuData.categories[${cIdx}].items[${iIdx}].price = parseInt(this.value)">
                         </div>
-                        <button class="btn" style="color:#c0392b; font-size:14px;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
+                        <button class="btn" style="color:#c0392b;" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
                 `;
                 itemBox.appendChild(row);
@@ -109,7 +79,6 @@
         });
     }
 
-    function showStatus() { const s = document.getElementById('saveStatus'); s.classList.add('show'); setTimeout(() => s.classList.remove('show'), 2000); }
     function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
     function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
     function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
