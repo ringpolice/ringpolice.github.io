@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chef Console | State Dining</title>
+    <title>Chef Console | Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -12,64 +12,108 @@
 <div class="container">
     <div class="header">
         <div class="controls">
-            <a href="index.html" class="control-btn" title="Back to Menu">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
+            <a href="index.html" class="control-btn"><i class="fa-solid fa-arrow-left"></i> Return to Menu</a>
+            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
         </div>
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png" alt="Logo">
-        <div class="subtitle">Chef's Kitchen Console</div>
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <div class="subtitle">Kitchen Administration</div>
     </div>
 
-    <div class="admin-list" id="admin-container"></div>
+    <div id="admin-container" class="admin-list"></div>
 
-    <div style="text-align: center;">
-        <button class="btn-save" onclick="downloadJSON()">
-            <i class="fa-solid fa-file-export"></i> Save & Export menu.json
+    <button class="btn btn-category" onclick="addCategory()">
+        <i class="fa-solid fa-folder-plus"></i> Add New Section (e.g. Specials)
+    </button>
+
+    <div class="save-zone">
+        <button class="btn btn-export" onclick="downloadJSON()">
+            <i class="fa-solid fa-file-export"></i> SAVE & EXPORT MENU.JSON
         </button>
+        <p style="font-size: 12px; margin-top: 10px; opacity: 0.8;">Download and replace your existing menu.json file.</p>
     </div>
 
-    <div class="footer">ADMINISTRATIVE ACCESS • VINDEXCRAFT</div>
+    <div class="footer">ADMINISTRATIVE ACCESS ONLY • VINDEXCRAFT</div>
 </div>
 
 <script>
-    let menuData = null;
+    let menuData = { categories: [] };
 
-    async function initAdmin() {
-        const response = await fetch('menu.json');
-        menuData = await response.json();
+    async function init() {
+        try {
+            const response = await fetch('menu.json');
+            menuData = await response.json();
+            render();
+        } catch (e) { console.log("Starting with empty menu."); render(); }
+    }
+
+    function render() {
         const container = document.getElementById('admin-container');
+        container.innerHTML = '';
 
-        menuData.categories.forEach((cat, catIdx) => {
+        menuData.categories.forEach((cat, cIdx) => {
             const section = document.createElement('div');
             section.className = 'category-section';
-            let html = `<div class="category-title">${cat.title}</div>`;
+            
+            section.innerHTML = `
+                <div class="category-title-container">
+                    <input class="admin-input flex-3" style="font-weight:bold; text-align:center;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
+                    <button class="btn btn-remove" onclick="removeCat(${cIdx})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div id="items-${cIdx}"></div>
+                <button class="btn btn-add" onclick="addItem(${cIdx})"><i class="fa-solid fa-plus"></i> Add Item to ${cat.title}</button>
+            `;
 
-            cat.items.forEach((item, itemIdx) => {
-                html += `
-                <div class="menu-item">
-                    <div class="admin-item-row">
-                        <input class="admin-input" value="${item.name}" onchange="updateItem(${catIdx}, ${itemIdx}, 'name', this.value)" placeholder="Item Name">
-                        <input class="admin-input" value="${item.price}" onchange="updateItem(${catIdx}, ${itemIdx}, 'price', this.value)" placeholder="Price">
+            const itemContainer = section.querySelector(`#items-${cIdx}`);
+            cat.items.forEach((item, iIdx) => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'admin-item-card';
+                itemCard.innerHTML = `
+                    <div class="row">
+                        <input class="admin-input flex-3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)" placeholder="Item Name">
+                        <input class="admin-input flex-1" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)" placeholder="Price">
+                        <button class="btn btn-remove" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <input class="admin-input admin-desc-input" value="${item.desc || ''}" onchange="updateItem(${catIdx}, ${itemIdx}, 'desc', this.value)" placeholder="Description (optional)">
-                </div>`;
+                    <textarea class="admin-input" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)" placeholder="Item Description">${item.desc || ''}</textarea>
+                `;
+                itemContainer.appendChild(itemCard);
             });
-            section.innerHTML = html;
             container.appendChild(section);
         });
     }
 
+    // Logic Functions
+    function updateCat(cIdx, val) { menuData.categories[cIdx].title = val; }
     function updateItem(cIdx, iIdx, field, val) { menuData.categories[cIdx].items[iIdx][field] = val; }
+    
+    function addCategory() {
+        menuData.categories.push({ title: "New Section", icon: "fa-utensils", items: [] });
+        render();
+    }
+    function removeCat(cIdx) {
+        if(confirm("Delete this entire section?")) { menuData.categories.splice(cIdx, 1); render(); }
+    }
+    function addItem(cIdx) {
+        menuData.categories[cIdx].items.push({ name: "", price: "", desc: "" });
+        render();
+    }
+    function removeItem(cIdx, iIdx) {
+        menuData.categories[cIdx].items.splice(iIdx, 1); render();
+    }
+
+    function toggleTheme(){
+        document.body.classList.toggle("dark");
+        const icon = document.getElementById("themeIcon");
+        icon.classList.toggle("fa-moon"); icon.classList.toggle("fa-sun");
+    }
 
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: "application/json"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = "menu.json"; a.click();
-        alert("Success! Replace your current menu.json with this new file.");
     }
 
-    initAdmin();
+    init();
 </script>
 </body>
 </html>
