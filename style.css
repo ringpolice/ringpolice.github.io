@@ -1,20 +1,23 @@
 :root {
     --navy: #16233b; --gold: #caa74c; --green: #2f7d36;
     --card: #ffffff; --text: #1c2430; --text-muted: #566573;
-    /* Theme-aware button colors */
-    --btn-bg: #16233b; 
-    --btn-text: #caa74c;
     --transition: all 0.4s ease-in-out;
 }
 
-/* Light mode overrides for the button so it flips with the page */
+/* Light Mode Variables */
 body:not(.dark) {
+    --card: #ffffff;
+    --text: #1c2430;
+    --text-muted: #566573;
     --btn-bg: #f0f2f5;
     --btn-text: #16233b;
 }
 
+/* Dark Mode Variables */
 body.dark { 
-    --card: #111a2e; --text: #e8edf5; --text-muted: #aab4be; 
+    --card: #111a2e; 
+    --text: #e8edf5; 
+    --text-muted: #aab4be; 
     --btn-bg: #16233b;
     --btn-text: #caa74c;
 }
@@ -26,7 +29,7 @@ body {
     background-size: cover; color: var(--text); font-family: "Libre Baskerville", serif;
     min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
     transition: var(--transition);
-    overscroll-behavior: none;
+    overscroll-behavior: none; /* macOS Safari Fix */
 }
 
 .container {
@@ -37,60 +40,51 @@ body {
     transition: var(--transition);
 }
 
+/* Header & Logo */
 .header { text-align: center; margin-bottom: 30px; flex-shrink: 0; position: relative; padding-top: 10px; }
 .logo-link { display: block; margin: 0 auto; width: fit-content; text-decoration: none; }
 .logo { height: 80px; width: auto; max-width: 300px; display: block; margin-bottom: 10px; transition: var(--transition); }
-.controls { position: absolute; right: 0px; top: 0px; display: flex; gap: 20px; z-index: 100; }
-.control-btn { cursor: pointer; color: var(--gold); font-size: 20px; transition: var(--transition); }
 
-.modal-overlay {
-    display: none; position: fixed; inset: 0; 
-    background: rgba(0,0,0,0.8); z-index: 9999; 
-    align-items: center; justify-content: center;
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+/* Theme Toggle & Icons Hover */
+.controls { position: absolute; right: 0px; top: 0px; display: flex; gap: 20px; z-index: 100; }
+.control-btn { 
+    cursor: pointer; 
+    color: var(--gold); 
+    font-size: 20px; 
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s ease; 
+}
+.control-btn:hover { 
+    transform: scale(1.3) rotate(15deg); 
+    text-shadow: 0 0 10px rgba(202, 167, 76, 0.6);
 }
 
+/* Unified Buttons */
+.btn { 
+    padding: 10px 20px; cursor: pointer; border-radius: 4px; 
+    font-weight: bold; border: 2px solid var(--gold); 
+    transition: var(--transition); 
+    position: relative; -webkit-appearance: none;
+    background: var(--btn-bg); 
+    color: var(--btn-text);
+}
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-outline { background: transparent; color: var(--gold); }
+
+/* Admin Grid & Items */
 .admin-section { margin-bottom: 30px; border: 1px solid var(--gold); padding: 25px; border-radius: 8px; background: rgba(202, 167, 76, 0.02); transition: var(--transition); }
 .admin-item-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(202, 167, 76, 0.2); padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: default; }
-
 .item-row { display: flex; align-items: center; gap: 15px; width: 100%; }
 .grip-handle { cursor: grab; color: var(--gold); opacity: 0.5; padding: 5px; }
 .inputs-container { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
-
-.price-editor {
-    display: flex; align-items: center; background: rgba(0,0,0,0.1); 
-    padding: 5px 10px; border-radius: 4px; border: 1px solid var(--gold);
-    width: 100px; flex-shrink: 0;
-}
-.price-input { 
-    width: 100%; background: transparent; border: none; color: var(--gold); 
-    font-family: 'Courier New', monospace; font-weight: bold; text-align: right; 
-    outline: none; -webkit-appearance: none;
-}
-
-.admin-input { 
-    width: 100%; border: none; background: transparent; color: inherit; 
-    font-family: inherit; outline: none; transition: var(--transition); 
-    -webkit-appearance: none;
-}
+.price-editor { display: flex; align-items: center; background: rgba(0,0,0,0.1); padding: 5px 10px; border-radius: 4px; border: 1px solid var(--gold); width: 100px; flex-shrink: 0; }
+.price-input { width: 100%; background: transparent; border: none; color: var(--gold); font-family: 'Courier New', monospace; font-weight: bold; text-align: right; outline: none; -webkit-appearance: none; }
+.admin-input { width: 100%; border: none; background: transparent; color: inherit; font-family: inherit; outline: none; transition: var(--transition); -webkit-appearance: none; }
 .admin-input:focus { border-bottom: 1px solid var(--gold); }
 
-/* --- UPDATED BUTTON LOGIC --- */
-.btn { 
-    padding: 10px 20px; cursor: pointer; border-radius: 4px; 
-    font-weight: bold; border: 1px solid var(--gold); transition: var(--transition); 
-    position: relative; -webkit-appearance: none;
-}
-.btn-main { 
-    background: var(--btn-bg); 
-    color: var(--btn-text); 
-}
-
+/* Pulse Notification */
 .unsaved::after {
     content: ''; position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
-    background: var(--gold); 
-    border: 2px solid var(--card); /* Matches the container background */
-    border-radius: 50%;
+    background: var(--gold); border: 2px solid var(--card); border-radius: 50%;
     animation: pulse 1.5s infinite;
 }
 
@@ -100,8 +94,16 @@ body {
     100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(202, 167, 76, 0); }
 }
 
+/* Public Menu View */
 #menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; overflow-y: auto; flex-grow: 1; }
 .menu-card { background: rgba(255,255,255,0.03); border-top: 3px solid var(--gold); padding: 20px; border-radius: 6px; transition: var(--transition); }
 .item-header { display: flex; justify-content: space-between; align-items: baseline; font-weight: bold; color: var(--gold); }
 .item-dots { flex: 1; border-bottom: 1px dotted rgba(202, 167, 76, 0.4); margin: 0 10px; }
 .sortable-ghost { opacity: 0.2; background: var(--gold) !important; }
+
+/* Modal Backdrop Safari */
+.modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; 
+    align-items: center; justify-content: center;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
