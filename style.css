@@ -1,9 +1,23 @@
 :root {
     --navy: #16233b; --gold: #caa74c; --green: #2f7d36;
     --card: #ffffff; --text: #1c2430; --text-muted: #566573;
+    /* Theme-aware button colors */
+    --btn-bg: #16233b; 
+    --btn-text: #caa74c;
     --transition: all 0.4s ease-in-out;
 }
-body.dark { --card: #111a2e; --text: #e8edf5; --text-muted: #aab4be; }
+
+/* Light mode overrides for the button so it flips with the page */
+body:not(.dark) {
+    --btn-bg: #f0f2f5;
+    --btn-text: #16233b;
+}
+
+body.dark { 
+    --card: #111a2e; --text: #e8edf5; --text-muted: #aab4be; 
+    --btn-bg: #16233b;
+    --btn-text: #caa74c;
+}
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -12,7 +26,6 @@ body {
     background-size: cover; color: var(--text); font-family: "Libre Baskerville", serif;
     min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
     transition: var(--transition);
-    /* macOS Safari Fix: Prevent scroll bounce from revealing white space */
     overscroll-behavior: none;
 }
 
@@ -24,51 +37,19 @@ body {
     transition: var(--transition);
 }
 
-/* --- HEADER AND LOGO FIXES --- */
-.header { 
-    text-align: center; 
-    margin-bottom: 30px; 
-    flex-shrink: 0; 
-    position: relative;
-    padding-top: 10px;
-}
-
-.logo-link {
-    display: block;
-    margin: 0 auto;
-    width: fit-content;
-    text-decoration: none;
-}
-
-.logo { 
-    height: 80px; 
-    width: auto;
-    max-width: 300px;
-    display: block;
-    margin-bottom: 10px; 
-    transition: var(--transition);
-}
-
-.controls { 
-    position: absolute; 
-    right: 0px; 
-    top: 0px; 
-    display: flex; 
-    gap: 20px; 
-    z-index: 100;
-}
+.header { text-align: center; margin-bottom: 30px; flex-shrink: 0; position: relative; padding-top: 10px; }
+.logo-link { display: block; margin: 0 auto; width: fit-content; text-decoration: none; }
+.logo { height: 80px; width: auto; max-width: 300px; display: block; margin-bottom: 10px; transition: var(--transition); }
+.controls { position: absolute; right: 0px; top: 0px; display: flex; gap: 20px; z-index: 100; }
 .control-btn { cursor: pointer; color: var(--gold); font-size: 20px; transition: var(--transition); }
 
-/* Modal Safari Fix: Webkit prefix for blur */
 .modal-overlay {
     display: none; position: fixed; inset: 0; 
     background: rgba(0,0,0,0.8); z-index: 9999; 
     align-items: center; justify-content: center;
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 
-/* Admin UI Components */
 .admin-section { margin-bottom: 30px; border: 1px solid var(--gold); padding: 25px; border-radius: 8px; background: rgba(202, 167, 76, 0.02); transition: var(--transition); }
 .admin-item-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(202, 167, 76, 0.2); padding: 12px; margin-bottom: 10px; border-radius: 6px; cursor: default; }
 
@@ -84,28 +65,32 @@ body {
 .price-input { 
     width: 100%; background: transparent; border: none; color: var(--gold); 
     font-family: 'Courier New', monospace; font-weight: bold; text-align: right; 
-    outline: none; -webkit-appearance: none; /* Safari Fix */
+    outline: none; -webkit-appearance: none;
 }
-.price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
 .admin-input { 
     width: 100%; border: none; background: transparent; color: inherit; 
     font-family: inherit; outline: none; transition: var(--transition); 
-    -webkit-appearance: none; /* Safari Fix */
+    -webkit-appearance: none;
 }
 .admin-input:focus { border-bottom: 1px solid var(--gold); }
 
-/* Buttons & Notifications */
+/* --- UPDATED BUTTON LOGIC --- */
 .btn { 
     padding: 10px 20px; cursor: pointer; border-radius: 4px; 
-    font-weight: bold; border: 1px solid transparent; transition: 0.2s; 
-    position: relative; -webkit-appearance: none; /* Safari Fix */
+    font-weight: bold; border: 1px solid var(--gold); transition: var(--transition); 
+    position: relative; -webkit-appearance: none;
 }
-.btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); width: 100%; }
+.btn-main { 
+    background: var(--btn-bg); 
+    color: var(--btn-text); 
+}
 
 .unsaved::after {
     content: ''; position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
-    background: var(--gold); border: 2px solid var(--navy); border-radius: 50%;
+    background: var(--gold); 
+    border: 2px solid var(--card); /* Matches the container background */
+    border-radius: 50%;
     animation: pulse 1.5s infinite;
 }
 
