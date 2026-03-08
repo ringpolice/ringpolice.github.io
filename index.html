@@ -2,76 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>VindexCraft | State Dining Menu</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>VindexCraft | Gourmet Menu</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="dark">
+    <div class="container">
+        <header style="text-align: center; margin-bottom: 30px;">
+            <img src="logo.png" alt="VindexCraft" style="height: 60px;">
+        </header>
 
-<div id="loginModal" class="modal-overlay">
-    <div style="background:var(--card); border:2px solid var(--gold); padding:40px; border-radius:12px; width:350px; text-align:center;">
-        <h2 style="color:var(--gold); margin-bottom:25px; font-family:'Playfair Display';">Chef Login</h2>
-        <input type="text" id="user" placeholder="Username" onkeydown="if(event.key==='Enter')handleLogin()" style="width:100%; padding:12px; margin-bottom:10px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:var(--text); border-radius:4px; outline:none;">
-        <input type="password" id="pass" placeholder="Password" onkeydown="if(event.key==='Enter')handleLogin()" style="width:100%; padding:12px; margin-bottom:20px; background:rgba(255,255,255,0.05); border:1px solid var(--gold); color:var(--text); border-radius:4px; outline:none;">
-        <button class="btn" style="width:100%" onclick="handleLogin()">AUTHENTICATE</button>
-        <p id="err" style="color:#ff4d4d; margin-top:15px; display:none; font-weight:bold;">Invalid Credentials</p>
-        <button onclick="closeLogin()" style="background:none; border:none; color:var(--text-muted); margin-top:20px; cursor:pointer;">Cancel</button>
+        <div id="public-menu" class="menu-grid">
+            </div>
     </div>
-</div>
 
-<div class="container">
-    <div class="header">
-        <div class="controls">
-            <i class="fa-solid fa-moon control-btn" onclick="document.body.classList.toggle('dark')"></i>
-            <i class="fa-solid fa-user-shield control-btn" onclick="openLogin()"></i>
-        </div>
-        <a href="index.html" class="logo-link">
-            <img class="logo" src="logo.png" alt="VindexCraft Logo">
-        </a>
-        <div style="color:var(--gold); font-size:12px; letter-spacing:3px; text-transform:uppercase;">Official State Dining Menu</div>
-    </div>
-    <div id="menu-grid"></div>
-</div>
+    <script>
+        async function loadMenu() {
+            try {
+                const res = await fetch('menu.json?v=' + Date.now());
+                const data = await res.json();
+                const container = document.getElementById('public-menu');
+                
+                data.categories.forEach(cat => {
+                    const catDiv = document.createElement('div');
+                    catDiv.className = 'menu-category';
+                    let itemsHtml = '';
+                    
+                    cat.items.forEach(item => {
+                        itemsHtml += `
+                            <div class="menu-item">
+                                <div class="item-main">
+                                    <span>${item.name}</span>
+                                    <div class="item-dots"></div>
+                                    <span style="color:var(--gold)">$${item.price}</span>
+                                </div>
+                                <div class="item-desc">${item.desc}</div>
+                            </div>`;
+                    });
 
-<script>
-    function openLogin() { document.getElementById('loginModal').style.display = 'flex'; }
-    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-
-    async function handleLogin() {
-        const u = document.getElementById('user').value;
-        const p = document.getElementById('pass').value;
-        const res = await fetch('./menu.json?v=' + Date.now());
-        const data = await res.json();
-        const auth = data.users.find(user => user.username === u && user.password === p);
-        if (auth) {
-            sessionStorage.setItem('authenticated', 'true');
-            window.location.href = 'admin.html';
-        } else {
-            document.getElementById('err').style.display = 'block';
+                    catDiv.innerHTML = `<h2>${cat.title}</h2>` + itemsHtml;
+                    container.appendChild(catDiv);
+                });
+            } catch (e) { console.error("Error loading menu", e); }
         }
-    }
-
-    async function loadMenu() {
-        const res = await fetch('./menu.json?v=' + Date.now());
-        const data = await res.json();
-        const grid = document.getElementById('menu-grid');
-        grid.innerHTML = data.categories.map(cat => `
-            <div class="menu-card">
-                <h3 style="color:var(--gold); margin-bottom:15px; border-bottom:1px solid rgba(202,167,76,0.2); padding-bottom:10px;">
-                    <i class="fa-solid ${cat.icon}"></i> ${cat.title}
-                </h3>
-                ${cat.items.map(i => `
-                    <div style="margin-bottom:15px;">
-                        <div class="item-header">
-                            <span>${i.name}</span>
-                            <div class="item-dots"></div>
-                            <span>$${i.price}</span>
-                        </div>
-                        <div style="font-size:12px; opacity:0.7; font-style:italic;">${i.desc}</div>
-                    </div>`).join('')}
-            </div>`).join('');
-    }
-    loadMenu();
-</script>
+        window.onload = loadMenu;
+    </script>
 </body>
 </html>
