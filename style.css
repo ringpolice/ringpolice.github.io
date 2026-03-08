@@ -12,6 +12,8 @@ body {
     background-size: cover; color: var(--text); font-family: "Libre Baskerville", serif;
     min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
     transition: var(--transition);
+    /* macOS Safari Fix: Prevent scroll bounce from revealing white space */
+    overscroll-behavior: none;
 }
 
 .container {
@@ -22,8 +24,49 @@ body {
     transition: var(--transition);
 }
 
-.header { text-align: center; margin-bottom: 30px; flex-shrink: 0; }
-.logo { height: 80px; width: auto; margin-bottom: 10px; }
+/* --- HEADER AND LOGO FIXES --- */
+.header { 
+    text-align: center; 
+    margin-bottom: 30px; 
+    flex-shrink: 0; 
+    position: relative;
+    padding-top: 10px;
+}
+
+.logo-link {
+    display: block;
+    margin: 0 auto;
+    width: fit-content;
+    text-decoration: none;
+}
+
+.logo { 
+    height: 80px; 
+    width: auto;
+    max-width: 300px;
+    display: block;
+    margin-bottom: 10px; 
+    transition: var(--transition);
+}
+
+.controls { 
+    position: absolute; 
+    right: 0px; 
+    top: 0px; 
+    display: flex; 
+    gap: 20px; 
+    z-index: 100;
+}
+.control-btn { cursor: pointer; color: var(--gold); font-size: 20px; transition: var(--transition); }
+
+/* Modal Safari Fix: Webkit prefix for blur */
+.modal-overlay {
+    display: none; position: fixed; inset: 0; 
+    background: rgba(0,0,0,0.8); z-index: 9999; 
+    align-items: center; justify-content: center;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
 
 /* Admin UI Components */
 .admin-section { margin-bottom: 30px; border: 1px solid var(--gold); padding: 25px; border-radius: 8px; background: rgba(202, 167, 76, 0.02); transition: var(--transition); }
@@ -38,17 +81,28 @@ body {
     padding: 5px 10px; border-radius: 4px; border: 1px solid var(--gold);
     width: 100px; flex-shrink: 0;
 }
-.price-input { width: 100%; background: transparent; border: none; color: var(--gold); font-family: 'Courier New', monospace; font-weight: bold; text-align: right; outline: none; }
+.price-input { 
+    width: 100%; background: transparent; border: none; color: var(--gold); 
+    font-family: 'Courier New', monospace; font-weight: bold; text-align: right; 
+    outline: none; -webkit-appearance: none; /* Safari Fix */
+}
 .price-input::-webkit-outer-spin-button, .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-.admin-input { width: 100%; border: none; background: transparent; color: inherit; font-family: inherit; outline: none; transition: var(--transition); }
+.admin-input { 
+    width: 100%; border: none; background: transparent; color: inherit; 
+    font-family: inherit; outline: none; transition: var(--transition); 
+    -webkit-appearance: none; /* Safari Fix */
+}
 .admin-input:focus { border-bottom: 1px solid var(--gold); }
 
 /* Buttons & Notifications */
-.btn { padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; border: 1px solid transparent; transition: 0.2s; position: relative; }
+.btn { 
+    padding: 10px 20px; cursor: pointer; border-radius: 4px; 
+    font-weight: bold; border: 1px solid transparent; transition: 0.2s; 
+    position: relative; -webkit-appearance: none; /* Safari Fix */
+}
 .btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); width: 100%; }
 
-/* Unsaved Changes Notification Dot */
 .unsaved::after {
     content: ''; position: absolute; top: -5px; right: -5px; width: 14px; height: 14px;
     background: var(--gold); border: 2px solid var(--navy); border-radius: 50%;
