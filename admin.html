@@ -1,183 +1,92 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef Console | Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+:root {
+    --navy: #16233b; --gold: #caa74c; --green: #2f7d36;
+    --card: #ffffff; --text: #1c2430; --text-muted: #566573;
+    --paper: repeating-linear-gradient(0deg, rgba(0,0,0,0.015), rgba(0,0,0,0.015) 2px, transparent 2px, transparent 4px);
+}
 
-<div id="saveStatus">
-    <i id="statusIcon" class="fa-solid fa-circle-notch spinner"></i>
-    <span id="statusText">Syncing...</span>
-</div>
+body.dark {
+    --card: #182338; --text: #e8edf5; --text-muted: #aab4be;
+    --paper: repeating-linear-gradient(0deg, rgba(255,255,255,0.02), rgba(255,255,255,0.02) 2px, transparent 2px, transparent 4px);
+}
 
-<div id="iconModal" class="modal-overlay">
-    <div class="modal-content" style="width: 400px;">
-        <h3 style="margin-bottom:20px; font-family:'Playfair Display'; color:var(--gold);">Select Section Icon</h3>
-        <div class="icon-grid" id="icon-picker-list"></div>
-        <button class="btn btn-main" style="margin-top:20px;" onclick="closeIconPicker()">Close</button>
-    </div>
-</div>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-<div class="container">
-    <div class="header">
-        <div class="controls">
-            <div class="control-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></div>
-            <div class="control-btn" onclick="toggleTheme()" title="Toggle Theme"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-        </div>
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
-        <div class="subtitle">Kitchen Administration Console</div>
-    </div>
+body {
+    background: #1a1a1a url('background.png') no-repeat center center fixed;
+    background-size: cover; color: var(--text); font-family: "Libre Baskerville", serif;
+    min-height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;
+    overflow-x: hidden; transition: background-color 0.4s ease;
+}
 
-    <div id="admin-container"></div>
+/* Modern Fluid Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: rgba(202, 167, 76, 0.05); border-radius: 10px; }
+::-webkit-scrollbar-thumb { 
+    background: var(--gold); border-radius: 10px; 
+    border: 2px solid transparent; background-clip: content-box; 
+}
+::-webkit-scrollbar-thumb:hover { background: var(--navy); background-clip: content-box; }
 
-    <div style="flex-shrink:0; padding-top: 20px;">
-        <button class="btn btn-add" style="width:100%;" onclick="addCategory()">+ Create New Menu Section</button>
-        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">DOWNLOAD MENU.JSON</button>
-    </div>
-</div>
+.container {
+    width: 90vw; max-width: 1200px; height: 85vh;
+    background: var(--paper), var(--card);
+    border: 3px solid var(--gold); border-radius: 10px;
+    padding: 30px 40px; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+    position: relative; display: flex; flex-direction: column;
+}
 
-<script>
-    if (sessionStorage.getItem('authenticated') !== 'true') window.location.href = 'index.html';
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+@media (max-width: 768px) {
+    body { align-items: flex-start; padding: 10px; overflow-y: auto; }
+    .container { width: 100%; height: auto; min-height: 95vh; padding: 50px 15px 20px 15px; }
+    .menu-grid { grid-template-columns: 1fr !important; }
+}
 
-    let menuData = null;
-    let draggedItemInfo = null; 
-    let draggedSectionIdx = null;
-    let activeIconCategory = null;
+.header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
+.logo { height: 100px; width: auto; margin-bottom: 5px; }
+.subtitle { font-family: "Playfair Display", serif; letter-spacing: 3px; text-transform: uppercase; font-size: 11px; color: var(--gold); }
 
-    const iconList = ['fa-utensils', 'fa-bread-slice', 'fa-plate-wheat', 'fa-bowl-food', 'fa-burger', 'fa-pizza-slice', 'fa-hotdog', 'fa-egg', 'fa-cheese', 'fa-shrimp', 'fa-fish', 'fa-ice-cream', 'fa-cookie', 'fa-cake-candles', 'fa-wine-glass', 'fa-mug-hot', 'fa-glass-water', 'fa-beer-mug-empty', 'fa-cocktail'];
+.controls {
+    position: absolute; right: 0; top: 0; display: flex; 
+    background: var(--card); border-left: 2px solid var(--gold); 
+    border-bottom: 2px solid var(--gold); border-radius: 0 8px 0 8px; z-index: 100;
+}
+.control-btn { cursor: pointer; font-size: 16px; color: var(--gold); padding: 12px 18px; border-left: 1px solid rgba(202, 167, 76, 0.1); transition: 0.2s; }
+.control-btn:hover { background: var(--gold); color: white; }
 
-    async function init() {
-        const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
-        menuData = await response.json();
-        render();
-    }
+.menu-grid, #admin-container { 
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    gap: 20px; overflow-y: auto; padding-right: 10px; flex-grow: 1; scroll-behavior: smooth;
+}
+#admin-container { grid-template-columns: 1fr; }
 
-    function render() {
-        const container = document.getElementById('admin-container');
-        container.innerHTML = '';
-        menuData.categories.forEach((cat, cIdx) => {
-            const section = document.createElement('div');
-            section.className = 'admin-section-card';
-            section.draggable = true;
+.menu-card { background: var(--card); padding: 20px; border-top: 4px solid var(--gold); border-radius: 6px; height: fit-content; }
+.card-title { font-family: "Playfair Display", serif; font-size: 19px; color: var(--navy); border-bottom: 1px solid rgba(202, 167, 76, 0.1); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+body.dark .card-title { color: #fff; }
 
-            // SECTION DRAG LOGIC
-            section.ondragstart = (e) => {
-                if (e.target.className === 'section-drag-handle' || e.target.parentElement.className === 'section-drag-handle') {
-                    draggedSectionIdx = cIdx;
-                    section.style.opacity = "0.4";
-                } else {
-                    e.preventDefault(); // Block drag if not hitting handle
-                }
-            };
-            section.ondragover = (e) => e.preventDefault();
-            section.ondrop = (e) => {
-                e.preventDefault();
-                if (draggedSectionIdx !== null) {
-                    const src = draggedSectionIdx;
-                    const [moved] = menuData.categories.splice(src, 1);
-                    menuData.categories.splice(cIdx, 0, moved);
-                    draggedSectionIdx = null;
-                    render(); showStatus('saved');
-                } else if (draggedItemInfo !== null) {
-                    const { cIdx: srcC, iIdx: srcI } = draggedItemInfo;
-                    const [moved] = menuData.categories[srcC].items.splice(srcI, 1);
-                    menuData.categories[cIdx].items.push(moved);
-                    draggedItemInfo = null;
-                    render(); showStatus('saved');
-                }
-            };
-            section.ondragend = () => { section.style.opacity = "1"; draggedSectionIdx = null; };
+/* Admin UI */
+.admin-section-card { background: rgba(202, 167, 76, 0.03); border: 1px solid var(--gold); border-radius: 8px; padding: 20px; margin-bottom: 25px; position: relative; }
+.section-drag-handle { background: var(--gold); height: 12px; margin: -20px -20px 15px -20px; border-radius: 6px 6px 0 0; cursor: grab; display: flex; justify-content: center; align-items: center; color: rgba(255,255,255,0.6); font-size: 10px; transition: 0.2s; touch-action: none; }
 
-            section.innerHTML = `
-                <div class="section-drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
-                <div style="display:flex; align-items:center; margin-bottom:15px; padding: 0 5px;">
-                    <i class="fa-solid ${cat.icon || 'fa-utensils'} admin-icon-display" onclick="openIconPicker(${cIdx})"></i>
-                    <input class="admin-input" style="font-weight:bold; font-size:18px; flex:1;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value, this)">
-                    <button class="btn btn-del" style="margin-left:10px;" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
-                </div>
-                <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" style="font-size:12px;" onclick="addItem(${cIdx})">+ Add Dish</button>`;
-            
-            const itemBox = section.querySelector(`#items-${cIdx}`);
-            cat.items.forEach((item, iIdx) => {
-                const row = document.createElement('div');
-                row.className = 'admin-item-box';
-                row.draggable = true;
+.admin-icon-display { font-size: 20px; color: var(--gold); cursor: pointer; padding: 8px; border: 1px dashed var(--gold); border-radius: 4px; margin-right: 10px; }
+.admin-item-box { background: var(--card); border: 1px solid rgba(0,0,0,0.05); padding: 12px; margin-bottom: 8px; border-radius: 4px; position: relative; }
+.admin-input { width: 100%; padding: 8px; border: none; border-bottom: 1px solid var(--gold); background: transparent; color: inherit; font-family: inherit; outline: none; }
 
-                // ITEM DRAG LOGIC
-                row.ondragstart = (e) => {
-                    e.stopPropagation(); // Prevents section from dragging
-                    draggedItemInfo = { cIdx, iIdx };
-                    row.style.opacity = "0.4";
-                };
-                row.ondragend = () => { row.style.opacity = "1"; };
+.drag-handle { color: var(--gold); cursor: grab; opacity: 0.6; padding: 5px; touch-action: none; }
+.dragging-touch { opacity: 0.5; border: 2px dashed var(--gold); pointer-events: none; position: fixed; z-index: 9999; width: 300px; }
 
-                row.innerHTML = `
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <i class="fa-solid fa-grip-vertical drag-handle"></i>
-                        <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value, this)">
-                        <div style="position:relative; flex:1; display:flex; align-items:center;">
-                            <span style="position:absolute; left:5px; color:var(--gold); font-weight:bold;">$</span>
-                            <input type="number" class="admin-input" style="padding-left:18px;" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value, this)">
-                        </div>
-                        <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
-                    </div>
-                    <textarea class="admin-input" style="height:40px; font-size:12px; margin-top:5px; margin-left:32px; width:calc(100% - 32px);" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value, this)">${item.desc}</textarea>`;
-                itemBox.appendChild(row);
-            });
-            container.appendChild(section);
-        });
-    }
+/* Icon Picker */
+.icon-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; max-height: 300px; overflow-y: auto; padding: 10px; }
+.icon-option { font-size: 24px; padding: 10px; border: 1px solid rgba(202, 167, 76, 0.1); border-radius: 8px; cursor: pointer; text-align: center; }
 
-    function openIconPicker(cIdx) {
-        activeIconCategory = cIdx;
-        const pickerList = document.getElementById('icon-picker-list');
-        pickerList.innerHTML = '';
-        iconList.forEach(icon => {
-            const el = document.createElement('i');
-            el.className = `fa-solid ${icon} icon-option`;
-            el.onclick = () => { menuData.categories[activeIconCategory].icon = icon; closeIconPicker(); render(); showStatus('saved'); };
-            pickerList.appendChild(el);
-        });
-        document.getElementById('iconModal').style.display = 'flex';
-    }
-    function closeIconPicker() { document.getElementById('iconModal').style.display = 'none'; }
+#saveStatus { position: fixed; bottom: 20px; right: 20px; background: var(--card); border: 2px solid var(--gold); padding: 10px 20px; border-radius: 50px; display: flex; align-items: center; gap: 10px; font-size: 11px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 2000; opacity: 0; transform: translateY(10px); transition: 0.3s; }
+#saveStatus.show { opacity: 1; transform: translateY(0); }
+.spinner { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    function updateItem(c, i, f, v, el) { 
-        menuData.categories[c].items[i][f] = (f === 'price') ? (parseInt(v) || 0) : v;
-        if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); }
-        showStatus('saved');
-    }
-    function updateCat(c, v, el) { menuData.categories[c].title = v; if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); } showStatus('saved'); }
+.btn { padding: 10px; cursor: pointer; border-radius: 4px; font-weight: bold; border: 1px solid transparent; transition: 0.2s; font-family: inherit; }
+.btn-add { color: var(--green); border-color: var(--green); background: transparent; }
+.btn-del { color: #c0392b; border-color: #c0392b; background: transparent; }
+.btn-main { background: var(--navy); color: var(--gold); border: 2px solid var(--gold); width: 100%; }
 
-    function showStatus(type) {
-        const el = document.getElementById('saveStatus');
-        const icon = document.getElementById('statusIcon');
-        el.classList.add('show');
-        icon.className = "fa-solid fa-circle-check";
-        document.getElementById('statusText').innerText = "Changes Staged";
-        setTimeout(() => el.classList.remove('show'), 1500);
-    }
-
-    function downloadJSON() {
-        const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'menu.json'; a.click();
-    }
-
-    function addItem(c) { menuData.categories[c].items.push({name: "New Item", price: 0, desc: ""}); render(); }
-    function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
-    function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
-    function addCategory() { menuData.categories.push({title: "New Section", icon: "fa-utensils", items: []}); render(); }
-    function logout() { sessionStorage.removeItem('authenticated'); window.location.href = 'index.html'; }
-    function toggleTheme() { document.body.classList.toggle('dark'); }
-
-    init();
-</script>
-</body>
-</html>
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(8px); }
+.modal-content { background: var(--card); border: 2px solid var(--gold); padding: 30px; border-radius: 12px; width: 340px; text-align: center; }
