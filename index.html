@@ -3,73 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>State Dining Menu</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Libre+Baskerville:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <title>VindexCraft | State Dining Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Libre+Baskerville&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-<div id="loginModal" class="modal-overlay">
-    <div class="modal-content">
-        <h2 style="font-family: 'Playfair Display'; margin-bottom: 20px; color: var(--gold);">Chef Authentication</h2>
-        <input type="text" id="username" class="admin-input" style="margin-bottom:15px;" placeholder="Username">
-        <input type="password" id="password" class="admin-input" style="margin-bottom:20px;" placeholder="Password">
-        <button class="btn btn-main" onclick="attemptLogin()">Login</button>
-        <button onclick="closeLogin()" style="margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">Cancel</button>
-    </div>
-</div>
-
+<body class="dark">
 <div class="container">
-    <div class="controls">
-        <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-        <div class="control-btn" onclick="showLogin()"><i class="fa-solid fa-user-gear"></i></div>
-    </div>
     <div class="header">
+        <div class="controls">
+            <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
+            <div class="control-btn" onclick="window.location.href='admin.html'"><i class="fa-solid fa-user-shield"></i></div>
+        </div>
         <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
         <div class="subtitle">Official State Dining Menu</div>
     </div>
-    <div class="menu-grid" id="menu-container"></div>
-    <div class="footer">VINDEXCRAFT OFFICIAL SERVICE • EST. 2024</div>
+    <div id="menu-grid"></div>
+    <div style="text-align:center; margin-top:20px; font-size:10px; opacity:0.5;">VINDEXCRAFT OFFICIAL SERVICE • EST. 2024</div>
 </div>
-
 <script>
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
-
-    function toggleTheme() {
-        const isDark = document.body.classList.toggle('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        const icon = document.getElementById('themeIcon');
-        if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-    }
-
     async function loadMenu() {
-        const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
-        const data = await response.json();
-        window.cachedUsers = data.users;
-        const container = document.getElementById('menu-container');
-        container.innerHTML = '';
-        data.categories.forEach(cat => {
-            const card = document.createElement('div');
-            card.className = 'menu-card';
-            let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
-            cat.items.forEach(item => {
-                html += `<div class="menu-item"><div class="item-header"><span class="item-name">${item.name}</span><span class="item-leader"></span><span class="item-price">$${item.price}</span></div>${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}</div>`;
+        try {
+            const response = await fetch(`./menu.json?v=${Date.now()}`);
+            const data = await response.json();
+            const grid = document.getElementById('menu-grid');
+            grid.innerHTML = '';
+            data.categories.forEach(cat => {
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                let itemsHtml = cat.items.map(item => `
+                    <div class="menu-item">
+                        <div class="item-header">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-dots"></span>
+                            <span class="item-price">$${item.price}</span>
+                        </div>
+                        <div class="item-desc">${item.desc}</div>
+                    </div>`).join('');
+                card.innerHTML = `<h3 class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</h3>${itemsHtml}`;
+                grid.appendChild(card);
             });
-            card.innerHTML = html;
-            container.appendChild(card);
-        });
+        } catch (e) { console.error(e); }
     }
-
-    function showLogin() { document.getElementById('loginModal').style.display = 'flex'; }
-    function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
-    function attemptLogin() {
-        const u = document.getElementById('username').value;
-        const p = document.getElementById('password').value;
-        const user = window.cachedUsers.find(user => user.username === u && user.password === p);
-        if (user) { sessionStorage.setItem('authenticated', 'true'); window.location.href = 'admin.html'; }
-        else { alert("Access Denied."); }
-    }
+    function toggleTheme() { document.body.classList.toggle('dark'); }
     loadMenu();
 </script>
 </body>
