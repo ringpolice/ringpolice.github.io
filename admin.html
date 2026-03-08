@@ -21,9 +21,9 @@
 
     <div id="admin-container"></div>
 
-    <div style="flex-shrink:0;">
-        <button class="btn btn-add" style="width:100%; margin-top:10px;" onclick="addCategory()">+ New Section</button>
-        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">SAVE & DOWNLOAD MENU.JSON</button>
+    <div style="flex-shrink:0; padding-top: 10px;">
+        <button class="btn btn-add" style="width:100%;" onclick="addCategory()">+ Create New Menu Section</button>
+        <button class="btn btn-main" style="margin-top:10px;" onclick="downloadJSON()">UPDATE MENU DATA (.JSON)</button>
     </div>
 </div>
 
@@ -57,12 +57,12 @@
             const section = document.createElement('div');
             section.className = 'admin-section-card';
             section.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                    <input class="admin-input" style="font-weight:bold; font-size:18px;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <input class="admin-input" style="font-weight:bold; font-size:20px; flex: 1; margin-right: 15px;" value="${cat.title}" onchange="updateCat(${cIdx}, this.value)">
                     <button class="btn btn-del" onclick="removeCategory(${cIdx})"><i class="fa-trash fa-solid"></i></button>
                 </div>
                 <div id="items-${cIdx}"></div>
-                <button class="btn btn-add" onclick="addItem(${cIdx})">+ Add Dish</button>`;
+                <button class="btn btn-add" style="font-size: 12px;" onclick="addItem(${cIdx})">+ Add Dish to ${cat.title}</button>`;
             
             const itemBox = section.querySelector(`#items-${cIdx}`);
             cat.items.forEach((item, iIdx) => {
@@ -70,11 +70,11 @@
                 row.className = 'admin-item-box';
                 row.innerHTML = `
                     <div style="display:flex; gap:10px;">
-                        <input class="admin-input" style="flex:3" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
-                        <input class="admin-input" style="flex:1" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
+                        <input class="admin-input" style="flex:3" placeholder="Dish Name" value="${item.name}" onchange="updateItem(${cIdx}, ${iIdx}, 'name', this.value)">
+                        <input class="admin-input" style="flex:1" placeholder="Price" value="${item.price}" onchange="updateItem(${cIdx}, ${iIdx}, 'price', this.value)">
                         <button class="btn btn-del" onclick="removeItem(${cIdx}, ${iIdx})">×</button>
                     </div>
-                    <textarea class="admin-input" style="height:40px; font-size:12px;" onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
+                    <textarea class="admin-input" style="height:50px; font-size:13px; margin-top: 5px;" placeholder="Description..." onchange="updateItem(${cIdx}, ${iIdx}, 'desc', this.value)">${item.desc}</textarea>`;
                 itemBox.appendChild(row);
             });
             container.appendChild(section);
@@ -84,12 +84,13 @@
     function updateCat(c, v) { menuData.categories[c].title = v; }
     function updateItem(c, i, f, v) { menuData.categories[c].items[i][f] = v; }
     function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
-    function removeCategory(c) { if(confirm("Delete?")) { menuData.categories.splice(c,1); render(); } }
-    function addItem(c) { menuData.categories[c].items.push({name: "New", price: "$0", desc: ""}); render(); }
+    function removeCategory(c) { if(confirm("Confirm deletion of this section?")) { menuData.categories.splice(c,1); render(); } }
+    function addItem(c) { menuData.categories[c].items.push({name: "", price: "$", desc: ""}); render(); }
     function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
 
     function downloadJSON() {
-        const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
+        const dataStr = JSON.stringify(menuData, null, 2);
+        const blob = new Blob([dataStr], {type: 'application/json'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'menu.json';

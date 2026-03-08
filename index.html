@@ -11,11 +11,11 @@
 
 <div id="loginModal" class="modal-overlay">
     <div class="modal-content">
-        <h2 style="font-family: 'Playfair Display'; margin-bottom: 20px; color: var(--gold);">Chef Login</h2>
+        <h2 style="font-family: 'Playfair Display'; margin-bottom: 25px; color: var(--gold);">Chef Authentication</h2>
         <input type="text" id="username" class="login-input" placeholder="Username">
         <input type="password" id="password" class="login-input" placeholder="Password">
-        <button class="btn btn-main" onclick="attemptLogin()" style="font-size: 14px; padding: 10px;">Access Admin</button>
-        <button onclick="closeLogin()" style="margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer;">Cancel</button>
+        <button class="btn btn-main" onclick="attemptLogin()" style="font-size: 14px; padding: 12px;">Login to Console</button>
+        <button onclick="closeLogin()" style="margin-top:20px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size: 13px;">Return to Menu</button>
     </div>
 </div>
 
@@ -33,7 +33,6 @@
 </div>
 
 <script>
-    // Theme Persistence
     if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 
     function toggleTheme() {
@@ -72,9 +71,8 @@
         const p = document.getElementById('password').value;
         const user = cachedData.users.find(user => user.username === u && user.password === p);
         if (user) { sessionStorage.setItem('authenticated', 'true'); window.location.href = 'admin.html'; }
-        else { alert("Invalid login."); }
+        else { alert("Incorrect credentials."); }
     }
-
     loadMenu();
 </script>
 </body>
