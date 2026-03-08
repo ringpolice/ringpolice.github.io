@@ -7,42 +7,37 @@
 </head>
 <body class="dark">
     <div class="container">
-        <header style="text-align: center; margin-bottom: 30px;">
-            <img src="logo.png" alt="VindexCraft" style="height: 60px;">
+        <header style="text-align: center; margin-bottom: 40px;">
+            <img src="logo.png" alt="VindexCraft" style="height: 80px;">
         </header>
 
-        <div id="public-menu" class="menu-grid">
+        <div id="public-menu" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; overflow-y: auto;">
             </div>
     </div>
 
     <script>
         async function loadMenu() {
-            try {
-                const res = await fetch('menu.json?v=' + Date.now());
-                const data = await res.json();
-                const container = document.getElementById('public-menu');
-                
-                data.categories.forEach(cat => {
-                    const catDiv = document.createElement('div');
-                    catDiv.className = 'menu-category';
-                    let itemsHtml = '';
-                    
-                    cat.items.forEach(item => {
-                        itemsHtml += `
-                            <div class="menu-item">
-                                <div class="item-main">
-                                    <span>${item.name}</span>
-                                    <div class="item-dots"></div>
-                                    <span style="color:var(--gold)">$${item.price}</span>
-                                </div>
-                                <div class="item-desc">${item.desc}</div>
-                            </div>`;
-                    });
-
-                    catDiv.innerHTML = `<h2>${cat.title}</h2>` + itemsHtml;
-                    container.appendChild(catDiv);
+            const res = await fetch('menu.json?v=' + Date.now());
+            const data = await res.json();
+            const container = document.getElementById('public-menu');
+            
+            data.categories.forEach(cat => {
+                const catDiv = document.createElement('div');
+                let itemsHtml = '';
+                cat.items.forEach(item => {
+                    itemsHtml += `
+                        <div class="menu-item" style="margin-bottom:20px;">
+                            <div class="item-main">
+                                <span>${item.name}</span>
+                                <div class="item-dots"></div>
+                                <span style="color:var(--gold)">$${item.price}</span>
+                            </div>
+                            <div class="item-desc">${item.desc}</div>
+                        </div>`;
                 });
-            } catch (e) { console.error("Error loading menu", e); }
+                catDiv.innerHTML = `<h2 style="font-family:var(--font-heading); color:var(--gold); margin-bottom:15px; text-transform:uppercase; font-size:1.2rem;">${cat.title}</h2>` + itemsHtml;
+                container.appendChild(catDiv);
+            });
         }
         window.onload = loadMenu;
     </script>
