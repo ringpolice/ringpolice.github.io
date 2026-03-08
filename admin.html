@@ -110,10 +110,12 @@
 
     function handleDrop(e, destC) {
         e.preventDefault();
+        if (!draggedInfo) return;
         const { cIdx, iIdx } = draggedInfo;
         const [moved] = menuData.categories[cIdx].items.splice(iIdx, 1);
         menuData.categories[destC].items.push(moved);
         showStatus('sync'); render(); setTimeout(() => showStatus('saved'), 600);
+        draggedInfo = null;
     }
 
     function updateItem(c, i, f, v, el) { 
@@ -123,8 +125,7 @@
         clearTimeout(saveTimeout); saveTimeout = setTimeout(() => showStatus('saved'), 800);
     }
 
-    function updateCat(c, v, el) { menuData.categories[c].title = v; flashEffect(el); }
-    function flashEffect(el) { if(el){ el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); } }
+    function updateCat(c, v, el) { menuData.categories[c].title = v; if(el) { el.classList.add('input-saved'); setTimeout(()=>el.classList.remove('input-saved'), 500); } }
 
     function showStatus(type) {
         const el = document.getElementById('saveStatus');
@@ -135,10 +136,26 @@
         else { icon.className = "fa-solid fa-circle-check"; text.innerText = "Data Updated"; setTimeout(()=>el.classList.remove('show'), 1500); }
     }
 
-    function addItem(c) { menuData.categories[c].items.push({name: "New Dish", price: 0, desc: ""}); render(); }
+    function addItem(c) { 
+        menuData.categories[c].items.push({name: "New Dish", price: 0, desc: ""}); 
+        render(); 
+        setTimeout(() => {
+            const list = document.getElementById(`items-${c}`);
+            list.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    }
+
     function removeCategory(c) { if(confirm("Delete section?")) { menuData.categories.splice(c,1); render(); } }
     function removeItem(c, i) { menuData.categories[c].items.splice(i,1); render(); }
-    function addCategory() { menuData.categories.push({title: "New Section", items: []}); render(); }
+    
+    function addCategory() { 
+        menuData.categories.push({title: "New Section", items: []}); 
+        render(); 
+        setTimeout(() => {
+            const container = document.getElementById('admin-container');
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }, 50);
+    }
 
     function downloadJSON() {
         const blob = new Blob([JSON.stringify(menuData, null, 2)], {type: 'application/json'});
