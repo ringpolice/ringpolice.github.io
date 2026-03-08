@@ -15,26 +15,38 @@
         <h2 style="font-family: 'Playfair Display'; margin-bottom: 20px; color: var(--gold);">Chef Authentication</h2>
         <input type="text" id="username" class="login-input admin-input" style="margin-bottom:15px;" placeholder="Username">
         <input type="password" id="password" class="login-input admin-input" style="margin-bottom:20px;" placeholder="Password">
-        <button class="btn btn-main" onclick="attemptLogin()">Login</button>
+        <button class="btn btn-main" onclick="attemptLogin()">Login to Console</button>
         <button onclick="closeLogin()" style="margin-top:15px; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">Return to Menu</button>
     </div>
 </div>
 
 <div class="container">
     <div class="controls">
-        <div class="control-btn" onclick="toggleTheme()"><i id="themeIcon" class="fa-solid fa-moon"></i></div>
-        <div class="control-btn" onclick="showLogin()"><i class="fa-solid fa-user-gear"></i></div>
+        <div class="control-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+            <i id="themeIcon" class="fa-solid fa-moon"></i>
+        </div>
+        <div class="control-btn" onclick="showLogin()" title="Admin Login">
+            <i class="fa-solid fa-user-gear"></i>
+        </div>
     </div>
+
     <div class="header">
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png" alt="State Logo">
         <div class="subtitle">Official State Dining Menu</div>
     </div>
+
     <div class="menu-grid" id="menu-container"></div>
+
     <div class="footer">VINDEXCRAFT OFFICIAL SERVICE • EST. 2024</div>
 </div>
 
 <script>
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
+    // 1. Theme Persistence Logic
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark');
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = 'fa-solid fa-sun';
+    }
 
     function toggleTheme() {
         const isDark = document.body.classList.toggle('dark');
@@ -43,32 +55,78 @@
         if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
 
+    // 2. Load Menu Function (with Cache Buster)
     async function loadMenu() {
-        const response = await fetch('./menu.json');
-        const data = await response.json();
-        window.cachedUsers = data.users;
-        const container = document.getElementById('menu-container');
-        data.categories.forEach(cat => {
-            const card = document.createElement('div');
-            card.className = 'menu-card';
-            let html = `<div class="card-title"><i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> ${cat.title}</div>`;
-            cat.items.forEach(item => {
-                html += `<div class="menu-item"><div class="item-header"><span class="item-name">${item.name}</span><span class="item-leader"></span><span class="item-price">$${item.price}</span></div>${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}</div>`;
+        try {
+            // The ?v= timestamp ensures GitHub Pages doesn't serve a cached old version
+            const response = await fetch(`./menu.json?v=${new Date().getTime()}`);
+            const data = await response.json();
+            
+            // Store users globally for the login function
+            window.cachedUsers = data.users;
+            
+            const container = document.getElementById('menu-container');
+            container.innerHTML = ''; // Clear existing content
+
+            data.categories.forEach(cat => {
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                
+                let html = `
+                    <div class="card-title">
+                        <i class="fa-solid ${cat.icon || 'fa-utensils'}"></i> 
+                        ${cat.title}
+                    </div>`;
+
+                cat.items.forEach(item => {
+                    // Price is stored as an integer (e.g., 45), displayed with $
+                    const displayPrice = item.price !== undefined ? `$${item.price}` : '';
+                    
+                    html += `
+                        <div class="menu-item">
+                            <div class="item-header">
+                                <span class="item-name">${item.name}</span>
+                                <span class="item-leader"></span>
+                                <span class="item-price">${displayPrice}</span>
+                            </div>
+                            ${item.desc ? `<span class="item-desc">${item.desc}</span>` : ''}
+                        </div>`;
+                });
+
+                card.innerHTML = html;
+                container.appendChild(card);
             });
-            card.innerHTML = html;
-            container.appendChild(card);
-        });
+        } catch (error) {
+            console.error("Error loading the menu:", error);
+            document.getElementById('menu-container').innerHTML = 
+                '<p style="text-align:center; color:var(--gold);">Unable to load menu. Please contact the administrator.</p>';
+        }
     }
 
+    // 3. Admin Authentication Logic
     function showLogin() { document.getElementById('loginModal').style.display = 'flex'; }
     function closeLogin() { document.getElementById('loginModal').style.display = 'none'; }
+    
     function attemptLogin() {
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
+        
+        if (!window.cachedUsers) {
+            alert("Menu data not yet loaded. Please wait a moment.");
+            return;
+        }
+
         const user = window.cachedUsers.find(user => user.username === u && user.password === p);
-        if (user) { sessionStorage.setItem('authenticated', 'true'); window.location.href = 'admin.html'; }
-        else { alert("Invalid credentials."); }
+        
+        if (user) { 
+            sessionStorage.setItem('authenticated', 'true'); 
+            window.location.href = 'admin.html'; 
+        } else { 
+            alert("Invalid credentials. Access denied."); 
+        }
     }
+
+    // Initialize
     loadMenu();
 </script>
 </body>
