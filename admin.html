@@ -10,16 +10,18 @@
 <body class="dark">
 <div class="container">
     <div class="header">
-        <div style="position:absolute; right:20px; top:20px; display: flex; gap: 20px;">
-            <i class="fa-solid fa-moon" onclick="toggleTheme()" style="cursor:pointer; color:var(--gold); font-size: 20px;"></i>
-            <i class="fa-solid fa-right-from-bracket" onclick="logout()" style="cursor:pointer; color:var(--gold); font-size: 20px;"></i>
+        <div class="controls">
+            <i class="fa-solid fa-moon control-btn" onclick="toggleTheme()"></i>
+            <i class="fa-solid fa-right-from-bracket control-btn" onclick="logout()"></i>
         </div>
-        <img class="logo" src="https://cdn.craftingstore.net/rPPmDHlLQ1/1aa628fef9ff6edac3320855caba2c95/aklb0wlnur0rxbtsfq8u.png">
+        <a href="index.html" class="logo-link">
+            <img class="logo" src="logo.png" alt="VindexCraft Logo">
+        </a>
         <div style="color:var(--gold); font-size:12px; text-transform:uppercase; letter-spacing: 2px;">Kitchen Administration Console</div>
     </div>
     
     <div id="admin-container" style="overflow-y:auto; flex-grow:1; padding-right: 10px;">
-        <div style="text-align:center; color:var(--gold); margin-top:50px;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing...</div>
+        <div style="text-align:center; color:var(--gold); margin-top:50px;"><i class="fa-solid fa-spinner fa-spin"></i> Initializing Console...</div>
     </div>
     
     <div style="padding-top:20px; display:flex; gap:15px; border-top: 1px solid rgba(202, 167, 76, 0.2);">
@@ -34,9 +36,11 @@
     let menuData = null;
 
     async function init() {
-        const res = await fetch('./menu.json?v=' + Date.now());
-        menuData = await res.json();
-        render();
+        try {
+            const res = await fetch('./menu.json?v=' + Date.now());
+            menuData = await res.json();
+            render();
+        } catch (e) { console.error("Load failed", e); }
     }
 
     function render() {
@@ -52,31 +56,15 @@
                         <i class="fa-solid fa-grip section-handle" style="cursor:grab; color:var(--gold); opacity:0.4;"></i>
                         <input class="admin-input" style="font-size:20px; font-weight:bold; font-family:'Playfair Display';" value="${cat.title}" onchange="markUnsaved()">
                     </div>
-                    <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="removeCategory(${cIdx})"></i>
+                    <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="this.closest('.admin-section').remove(); markUnsaved();"></i>
                 </div>
-                <div class="items-list" style="min-height:20px;">
-                    ${cat.items.map((item, iIdx) => `
-                        <div class="admin-item-box">
-                            <div class="item-row">
-                                <i class="fa-solid fa-grip-vertical grip-handle"></i>
-                                <div class="inputs-container">
-                                    <input class="admin-input" style="font-weight:bold;" value="${item.name}" onchange="markUnsaved()">
-                                    <input class="admin-input" style="font-size:12px; opacity:0.7;" value="${item.desc}" onchange="markUnsaved()">
-                                </div>
-                                <div class="price-editor">
-                                    <span style="color:var(--gold); font-size:12px; margin-right:5px; font-weight:bold;">$</span>
-                                    <input type="number" class="price-input" value="${item.price}" onchange="markUnsaved()">
-                                </div>
-                                <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer; width:20px; text-align:right;" onclick="removeItem(this)"></i>
-                            </div>
-                        </div>
-                    `).join('')}
+                <div class="items-list" style="min-height:30px;">
+                    ${cat.items.map(item => createItemHTML(item)).join('')}
                 </div>
                 <button class="btn" style="font-size:11px; color:var(--green); border-color:var(--green); background:transparent; margin-top:10px; border-style:dashed;" onclick="addItem(this)">+ ADD NEW DISH</button>
             `;
             container.appendChild(section);
 
-            // Item dragging (shared across sections)
             new Sortable(section.querySelector('.items-list'), {
                 group: 'shared',
                 handle: '.grip-handle',
@@ -86,7 +74,6 @@
             });
         });
 
-        // Section dragging
         new Sortable(container, {
             handle: '.section-handle',
             animation: 200,
@@ -95,32 +82,35 @@
         });
     }
 
+    function createItemHTML(item) {
+        return `
+            <div class="admin-item-box">
+                <div class="item-row">
+                    <i class="fa-solid fa-grip-vertical grip-handle"></i>
+                    <div class="inputs-container">
+                        <input class="admin-input" style="font-weight:bold;" value="${item.name || 'New Dish'}" onchange="markUnsaved()">
+                        <input class="admin-input" style="font-size:12px; opacity:0.7;" value="${item.desc || 'Description'}" onchange="markUnsaved()">
+                    </div>
+                    <div class="price-editor">
+                        <span style="color:var(--gold); font-size:12px; margin-right:5px; font-weight:bold;">$</span>
+                        <input type="number" class="price-input" value="${item.price || 0}" onchange="markUnsaved()">
+                    </div>
+                    <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer; width:20px; text-align:right;" onclick="this.closest('.admin-item-box').remove(); markUnsaved();"></i>
+                </div>
+            </div>`;
+    }
+
     function markUnsaved() { document.getElementById('saveBtn').classList.add('unsaved'); }
     function clearUnsaved() { document.getElementById('saveBtn').classList.remove('unsaved'); }
 
     function addItem(btn) { 
         const list = btn.previousElementSibling;
-        const div = document.createElement('div');
-        div.className = 'admin-item-box';
-        div.innerHTML = `
-            <div class="item-row">
-                <i class="fa-solid fa-grip-vertical grip-handle"></i>
-                <div class="inputs-container">
-                    <input class="admin-input" style="font-weight:bold;" value="New Dish" onchange="markUnsaved()">
-                    <input class="admin-input" style="font-size:12px; opacity:0.7;" value="Description" onchange="markUnsaved()">
-                </div>
-                <div class="price-editor">
-                    <span style="color:var(--gold); font-size:12px; margin-right:5px; font-weight:bold;">$</span>
-                    <input type="number" class="price-input" value="0" onchange="markUnsaved()">
-                </div>
-                <i class="fa-solid fa-xmark" style="color:#ff4d4d; cursor:pointer; width:20px; text-align:right;" onclick="removeItem(this)"></i>
-            </div>`;
-        list.appendChild(div);
+        const temp = document.createElement('div');
+        temp.innerHTML = createItemHTML({});
+        list.appendChild(temp.firstElementChild);
         markUnsaved();
     }
 
-    function removeItem(btn) { btn.closest('.admin-item-box').remove(); markUnsaved(); }
-    
     function addCategory() { 
         const container = document.getElementById('admin-container');
         const section = document.createElement('div');
@@ -133,7 +123,7 @@
                 </div>
                 <i class="fa-solid fa-trash-can" style="color:#ff4d4d; cursor:pointer;" onclick="this.closest('.admin-section').remove(); markUnsaved();"></i>
             </div>
-            <div class="items-list" style="min-height:20px;"></div>
+            <div class="items-list" style="min-height:30px;"></div>
             <button class="btn" style="font-size:11px; color:var(--green); border-color:var(--green); background:transparent; margin-top:10px; border-style:dashed;" onclick="addItem(this)">+ ADD NEW DISH</button>`;
         container.appendChild(section);
         
@@ -142,8 +132,6 @@
         });
         markUnsaved();
     }
-
-    function removeCategory(idx) { if(confirm("Delete entire section?")) { render(); /* Fallback if UI sync fails */ markUnsaved(); } }
 
     function syncData() {
         const categories = [];
